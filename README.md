@@ -30,7 +30,7 @@ This repository provides some tools designed for analyzing and comparing footbal
 
 Our Grade value is based on a formula that evaluates player data adjusted for their position group. <br>
 We normalize the data so that we scale the values to a standardized range. <br>
-Therefore, we opted for the following intervals to this Grading System: <br>
+Therefore, we opted for the following intervals to this Grading System: <br><br>
              
  • S - Elite Output in the Competition  <br><br>
  • A - Good Output in the Competition  <br><br>
