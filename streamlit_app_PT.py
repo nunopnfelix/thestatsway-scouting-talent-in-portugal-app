@@ -5,6 +5,7 @@ import streamlit as st
 import streamlit.web.cli as stcli
 import pandas as pd
 import numpy as np
+import plotly as plt
 import plotly.graph_objects as go
 
 st.set_page_config(
