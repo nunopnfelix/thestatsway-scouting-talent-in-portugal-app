@@ -1,6 +1,6 @@
 # 🔍 TheStatsWay - Scouting Talent in Portugal 🔍
  <br>
-This repository provides some tools designed for analyzing and comparing football players performances/outputs across different age groups, positions, competitions and leagues. With a particular focus on the Portuguese Competitions, the tool allows users to explore pre-set grades for various players, offering intuitive dashboards, tables and graphs to look at.
+This repository provides some tools designed for analysing and comparing football players performances/outputs across different age groups, positions, competitions and leagues. With a particular focus on the Portuguese Competitions, the tool allows users to explore pre-set grades for various players, offering intuitive dashboards, tables and graphs to look at.
  <br>
 
 ## App with the aim of scout and analyze the football talent in Portugal.
