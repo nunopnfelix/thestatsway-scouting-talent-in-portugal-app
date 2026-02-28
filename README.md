@@ -10,7 +10,7 @@ This repository provides some tools designed for analyzing and comparing footbal
  
 # 🔎 Competitions:
 
- • Liga Portugal 2 <br>
+ • Liga Portugal 2 <br><br>
  • Liga 3 <br>
  • Campeonato de Portugal <br>
  • Liga Revelação U23 <br>
