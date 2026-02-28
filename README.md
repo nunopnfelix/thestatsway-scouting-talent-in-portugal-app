@@ -10,36 +10,34 @@ This repository provides some tools designed for analyzing and comparing footbal
  
 # 🔎 Competitions:
 
-Liga Portugal 2
-Liga 3
-Campeonato de Portugal
-Liga Revelação U23
- <br>
+Liga Portugal 2 <br>
+Liga 3 <br>
+Campeonato de Portugal <br>
+Liga Revelação U23 <br>
  
 # ℹ️ Position Abreviations:
     
-GK: Goalkeepers
-CB: Centre-Backs
-FB & WB: Full-Backs & Wing-Backs
-MF: Midfielders
-AM & W: Attacking-Mids & Wingers
-CF: Centre-Fowards
+GK: Goalkeepers <br>
+CB: Centre-Backs <br>
+FB & WB: Full-Backs & Wing-Backs <br>
+MF: Midfielders <br>
+AM & W: Attacking-Mids & Wingers <br>
+CF: Centre-Fowards <br>
  <br>
  
 # ℹ️ Grading Values:
 
-Our Grade value is based on a formula that evaluates player data adjusted for their position group.
-We normalize the data so that we scale the values to a standardized range.
-Therefore, we opted for the following intervals to this Grading System:
+Our Grade value is based on a formula that evaluates player data adjusted for their position group. <br>
+We normalize the data so that we scale the values to a standardized range. <br>
+Therefore, we opted for the following intervals to this Grading System: <br>
              
-S - Elite Output in the Competition
-A - Good Output in the Competition
-B - Above Average Output in the Competition
-C - Average Output in the Competition
-D - Below Average Output in the Competition
-E - Poor Output in the Competition
-F - Very Poor Output in the Competition
- <br>
+S - Elite Output in the Competition <br>
+A - Good Output in the Competition <br>
+B - Above Average Output in the Competition <br>
+C - Average Output in the Competition <br>
+D - Below Average Output in the Competition <br>
+E - Poor Output in the Competition <br>
+F - Very Poor Output in the Competition <br>
  
-## ℹ️ Version: 𝐯𝟏.𝟎.𝟎
-## ℹ️ Data Last Updated: Feb 11, 2025
+### ℹ️ Version: 𝐯𝟏.𝟎.𝟎
+### ℹ️ Data Last Updated: Feb 11, 2025
