@@ -1,3 +1,4 @@
+pip
 streamlit
 pandas
 numpy
@@ -6,4 +7,3 @@ mplsoccer
 matplotlib
 io
 seaborn
-pip
