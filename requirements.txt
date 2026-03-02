@@ -5,5 +5,4 @@ numpy
 plotly
 mplsoccer
 matplotlib
-io
 seaborn
