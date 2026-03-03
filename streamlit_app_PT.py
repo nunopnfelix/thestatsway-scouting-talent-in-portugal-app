@@ -106,7 +106,7 @@ elif page == "Player Stats - Player Overview":
     Position_filter1 = st.selectbox("Position:", 
                                 df1['Position'].unique())
     
-    df1_PF = df1_TF[df1_TF['Position']== Position_filter1]
+    df1_PF = df1[df1['Position']== Position_filter1]
 
     min_age1 = int(df1['Age'].min())
     max_age1 = int(df1['Age'].max())
