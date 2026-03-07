@@ -1,3 +1,4 @@
+#streamlit run streamlit_app_PT.py
 import streamlit as st
 import streamlit.web.cli as stcli
 import pandas as pd
@@ -26,7 +27,7 @@ def get_grade_color(grade):
     if grade == "S":
         return '#1b5e20' # Elite
     elif grade == "A":
-        return "#348542" # Good
+        return "#36A348" # Good
     elif grade == "B":
         return "#89ff3b" # Above Average
     elif grade == "C":
@@ -35,15 +36,24 @@ def get_grade_color(grade):
         return '#fb8c00' # Below Average
     elif grade == "E":
         return "#fb6400" # Poor
-    else:
+    elif grade == "F":
         return "#f43636" # Very Poor
-    
+    else:
+        return "#3936f4" # Error
+
+def style_grade_column(val):
+    color = get_grade_color(val)
+    text_color = "white" if val in ["S", "A", "E", "F"] else "black"
+    return f'background-color: {color}; color: {text_color}; font-weight: bold;'
+
+grade_order = ['S', 'A', 'B', 'C', 'D', 'E', 'F']
+
 st.sidebar.divider()
 st.sidebar.header("🔍 Page Selection 🔍")
 st.sidebar.write("")
 page = st.sidebar.radio("Pages:", ["Instructions & Abbreviations","Player Stats - Player Overview","Player Stats - Team Overview","Player Comparison Tool","Lineup Builder","Graph - Simple Plot","Graph - Interactive Plot"])
 st.sidebar.divider()
-st.sidebar.write("𝐯𝟏.𝟎.𝟎𝟏")
+st.sidebar.write("𝐯𝟏.𝟎.𝟎𝟐")
 st.sidebar.write("Data Last Updated: Feb 11, 2025")
 
 df1 = df
@@ -59,6 +69,8 @@ if page == "Instructions & Abbreviations":
     st.write("")
     st.info("Position Abreviations:", icon="ℹ️")
     st.write("""---
+    Position Group:
+             
     GK: Goalkeepers
     CB: Centre-Backs
     FB & WB: Full-Backs & Wing-Backs
@@ -66,19 +78,27 @@ if page == "Instructions & Abbreviations":
     AM & W: Attacking-Mids & Wingers
     CF: Centre-Fowards""")
     st.write("""---""")
+    st.info("Player Output Metrics:", icon="ℹ️")
+    st.write("""---
+    The Player Output Metrics are calculation values adjusted for their position group.
+    To calculate our outputs, we have done calculations based on the variables & weights that fall within each area that we considered relevant to that analysis.
+             
+    Example:
+        A Player (Centre-Back) with a High Goal-Scoring Output is one of the best players in his position group (CB) for that metric.""")
+    st.write("""---""")
     st.info("Grading Values:", icon="ℹ️")
     st.write("""---
-    Our Grade value is based on a formula that evaluates player data adjusted for their position group.
+    Our Grade value is based on a formula that evaluates player data (our Player Metrics) adjusted for their position group.
     We normalize the data so that we scale the values to a standardized range.
-    Therefore, we opted for the following intervals to this Grading System:
+    Therefore, we opted for the following intervals to this Grading System and respective colors:
              
-    S - Elite Output in the Competition
-    A - Good Output in the Competition
-    B - Above Average Output in the Competition
-    C - Average Output in the Competition
-    D - Below Average Output in the Competition
-    E - Poor Output in the Competition
-    F - Very Poor Output in the Competition""")
+    S - Elite Output in the Competition (Dark Green)
+    A - Good Output in the Competition (Green)
+    B - Above Average Output in the Competition (Light Green)
+    C - Average Output in the Competition (Yellow)
+    D - Below Average Output in the Competition (Orange)
+    E - Poor Output in the Competition (Dark Orange)
+    F - Very Poor Output in the Competition (Red)""")
     st.write("""---""")
 
 elif page == "Player Stats - Player Overview":
@@ -91,25 +111,32 @@ elif page == "Player Stats - Player Overview":
     """, icon="ℹ️")
     st.subheader("🛠️ Player Settings")
 
-    League_filter1 = st.selectbox("League:", 
-                                df1['League'].unique())
+    Season_filter1 = st.selectbox("Season:", 
+                                df1['Season'].unique())
     
-    df1_LF = df1[df1['League']== League_filter1]
+    df1_SF = df1[df1['Season']== Season_filter1]
 
+    League_filter1 = st.selectbox("League:", 
+                                df1_SF['League'].unique())
+    
+    df1_LF = df1_SF[df1_SF['League']== League_filter1]
+
+    teams1 = df1_LF['Team'].unique().tolist()
+    sorted_teams1 = sorted(teams1)
     TeamFilter1 = st.multiselect("Team Filter:",
-                                options=df1_LF["Team"].unique(),
-                                default=df1_LF["Team"].unique())
+                                 options=sorted_teams1,
+                                default=sorted_teams1)
 
     if TeamFilter1:
         df1_TF = df1_LF[df1_LF["Team"].isin(TeamFilter1)]
-
+    
     Position_filter1 = st.selectbox("Position:", 
-                                df1['Position'].unique())
+                                df1_TF['Position'].unique())
     
     df1_PF = df1_TF[df1_TF['Position']== Position_filter1]
 
-    min_age1 = int(df1['Age'].min())
-    max_age1 = int(df1['Age'].max())
+    min_age1 = int(df1_PF['Age'].min())
+    max_age1 = int(df1_PF['Age'].max())
     
     age_range1 = st.slider("Age Range:",
                         min_value=min_age1,
@@ -118,15 +145,24 @@ elif page == "Player Stats - Player Overview":
 
     df1_AF = df1_PF[(df1_PF['Age'] >= age_range1[0]) & (df1_PF['Age'] <= age_range1[1])]
 
+    unique_grade1 = df['Grade'].unique().tolist()
+
+    sorted_grades1 = sorted(unique_grade1, 
+                            key=lambda x: grade_order.index(x) if x in grade_order else 999)
+
     Gradefilter1 = st.multiselect("Grade", 
-                                  options=df1_AF['Grade'].unique(), 
-                                  default=df1_AF['Grade'].unique())
+                                  options=sorted_grades1,
+                                  default=sorted_grades1)
+
     df1_GF = df1_AF[df1_AF['Grade'].isin(Gradefilter1)]
+  
+    df1_GF['Grade'] = pd.Categorical(df1_GF['Grade'], categories=grade_order, ordered=True)
+    filtered_df1 = df1_GF.sort_values(by=['Grade','PosRank'],ascending=True).reset_index(drop=True)
 
-    filtered_df1 = df1_GF.sort_values(by=['PosRank'], 
-                                    ascending=True)
+    styled_df = filtered_df1.style.map(style_grade_column, subset=['Grade'])\
+                   .format(precision=2, subset=['Goal-Scoring', 'Attack','Possession', 'Defense','Physical','Goalkeeping'])
 
-    st.dataframe(filtered_df1, 
+    st.dataframe(styled_df, 
                  width="stretch", 
                  hide_index=True,
                  height = 500)
@@ -142,13 +178,21 @@ elif page == "Player Stats - Team Overview":
 
     st.subheader("🛠️ Player Settings")
 
-    League_filter2 = st.selectbox("League:", 
-                                df2['League'].unique())
+    Season_filter2 = st.selectbox("Season:", 
+                                df2['Season'].unique())
     
-    df2_LF = df2[df2['League']== League_filter2]
+    df2_SF = df2[df2['Season']== Season_filter2]
+
+    League_filter2 = st.selectbox("League:", 
+                                df2_SF['League'].unique())
+    
+    df2_LF = df2_SF[df2_SF['League']== League_filter2]
+
+    teams2 = df2_LF['Team'].unique().tolist()
+    sorted_teams2 = sorted(teams2)
 
     Team_filter2 = st.selectbox("Team:", 
-                               df2_LF['Team'].unique())
+                                options=sorted_teams2)
 
     df2_TF = df2_LF[df2_LF['Team']== Team_filter2]
 
@@ -158,8 +202,8 @@ elif page == "Player Stats - Team Overview":
     
     df2_PF = df2_TF[df2_TF['Position'].isin(Position_Filter2)]
 
-    min_age2 = int(df2['Age'].min())
-    max_age2 = int(df2['Age'].max())
+    min_age2 = int(df2_PF['Age'].min())
+    max_age2 = int(df2_PF['Age'].max())
     
     age_range2 = st.slider("Age Range:",
                         min_value=min_age2,
@@ -168,10 +212,13 @@ elif page == "Player Stats - Team Overview":
 
     df2_AF = df2_PF[(df2_PF['Age'] >= age_range2[0]) & (df2_PF['Age'] <= age_range2[1])]
 
-    filtered_df2 = df2_AF.sort_values(by=['PosRank'], 
-                                     ascending=True)
+    df2_AF['Grade'] = pd.Categorical(df2_AF['Grade'], categories=grade_order, ordered=True)
+    filtered_df2 = df2_AF.sort_values(by=['Grade','PosRank'],ascending=True).reset_index(drop=True)
 
-    st.dataframe(filtered_df2, 
+    styled_df2 = filtered_df2.style.map(style_grade_column, subset=['Grade'])\
+                   .format(precision=2, subset=['Goal-Scoring', 'Attack','Possession', 'Defense','Physical','Goalkeeping'])
+    
+    st.dataframe(styled_df2, 
                  width="stretch", 
                  hide_index=True,
                  height = 500)
@@ -189,11 +236,16 @@ elif page == "Player Comparison Tool":
     df3 = df3[df3.Position != "GK"]
     df3 = df3.drop(columns=['Goalkeeping'])
 
-    League_filter3 = st.selectbox("League:", 
-                                df3['League'].unique())
+    Season_filter3 = st.selectbox("Season:", 
+                                df3['Season'].unique())
     
-    df3_LF = df3[df3['League']== League_filter3]
-    df4_LF = df3[df3['League']== League_filter3]
+    df3_SF = df3[df3['Season']== Season_filter3]
+
+    League_filter3 = st.selectbox("League:", 
+                                df3_SF['League'].unique())
+    
+    df3_LF = df3_SF[df3_SF['League']== League_filter3]
+    df4_LF = df3_SF[df3_SF['League']== League_filter3]
 
     Position_filter3 = st.selectbox("Position:", 
                                 df3['Position'].unique())
@@ -201,34 +253,46 @@ elif page == "Player Comparison Tool":
     df3_PF = df3_LF[df3_LF['Position']== Position_filter3]
     df4_PF = df4_LF[df4_LF['Position']== Position_filter3]
 
+    teams3 = df3_PF['Team'].unique().tolist()
+    sorted_teams3 = sorted(teams3)
+
+    teams4 = df4_PF['Team'].unique().tolist()
+    sorted_teams4 = sorted(teams4)
+
     col1, col2 = st.columns(2)
 
     with col1:       
         t1 = st.selectbox("Select Team:", 
-            df3_PF['Team'].unique())
+                          options=sorted_teams3)
         
         df3_TF = df3_PF[df3_PF['Team']== t1]
 
     with col2:
         t2 = st.selectbox("Select Team:", 
-                          df4_PF['Team'].unique(), 
+                          sorted_teams4,
                           index=1)
        
         df4_TF = df4_PF[df4_PF['Team']== t2]
+    
+    players3 = df3_TF['Player'].unique().tolist()
+    sorted_players3 = sorted(players3)
+
+    players4 = df4_TF['Player'].unique().tolist()
+    sorted_players4 = sorted(players4)
     
     col3, col4 = st.columns(2)
     
     with col3:       
         p1 = st.selectbox("Select Player 1", 
-                          df3_TF['Player'].unique(), 
+                          sorted_players3, 
                           index=0)
 
     with col4:
         p2 = st.selectbox("Select Player 2", 
-                          df4_TF['Player'].unique(), 
+                          sorted_players4, 
                           index=1)
 
-    categories = ['Attack', 'Possession', 'Defense', 'Physical']
+    categories = ['Goal-Scoring', 'Attack', 'Possession', 'Defense', 'Physical']
 
     def get_player_stats1(player_name1):
         return df3_TF[df3_TF['Player'] == player_name1][categories].values.flatten().tolist()
@@ -269,7 +333,13 @@ elif page == "Player Comparison Tool":
     comparison_df4 = df4_TF[df4_TF['Player'].isin([p2])].set_index('Player')
     comparison_df = pd.concat([comparison_df3, comparison_df4])
 
-    st.table(comparison_df)
+    styled_df3 = comparison_df.style.map(style_grade_column, subset=['Grade'])\
+                   .format(precision=2, subset=['Goal-Scoring', 'Attack','Possession', 'Defense','Physical'])
+    
+    st.dataframe(styled_df3, 
+                 width="stretch", 
+                 hide_index=True,
+                 height = 110)
 
 elif page == "Lineup Builder":
     st.write("""---""")
@@ -332,13 +402,21 @@ elif page == "Lineup Builder":
 
     st.subheader("🛠️ Lineup Settings")
 
-    League_filter4 = st.selectbox("League:", 
-                                df4['League'].unique())
+    Season_filter4 = st.selectbox("Season:", 
+                                df4['Season'].unique())
     
-    df4_LF = df4[df4['League']== League_filter4]
+    df4_SF = df4[df4['Season']== Season_filter4]
+
+    League_filter4 = st.selectbox("League:", 
+                                df4_SF['League'].unique())
+    
+    df4_LF = df4_SF[df4_SF['League']== League_filter4]
+
+    teams4 = df4_LF['Team'].unique().tolist()
+    sorted_teams4 = sorted(teams4)
 
     Team_filter4 = st.selectbox("Team:", 
-                               df4_LF['Team'].unique())
+                                options=sorted_teams4)
     
     df4_TF = df4_LF[df4_LF['Team']== Team_filter4]
 
@@ -351,6 +429,12 @@ elif page == "Lineup Builder":
         st.session_state.lineup = {}
 
     st.subheader("📋 Select Your Eleven")
+
+    st.info(
+    """
+    The color of the player plot reflects the color of their grade where :
+    Elite - S (Dark Green) to Very Poor - F (Red)
+    """, icon="ℹ️")
 
     footer_tag = "@TheStatsWay"
 
@@ -398,7 +482,7 @@ elif page == "Lineup Builder":
     for pos, info in plot_data.items():
 
         grade_color = get_grade_color(info['grade'])
-        ax.set_title(f"{Team_filter4} - {selected_formation}", color='Black', fontsize=16, fontweight='bold', pad=20)
+        ax.set_title(f"{Team_filter4} - {Team_filter4} - {selected_formation}", color='Black', fontsize=16, fontweight='bold', pad=20)
         ax.text(0.92, 0.98, "https://thestatsway-scouting-talent-in-portugal-app.streamlit.app/", transform=ax.transAxes, 
         color='Black', fontsize=7, fontweight='bold',
         ha='right', va='bottom', alpha=0.7)
@@ -458,10 +542,15 @@ elif page == "Graph - Simple Plot":
     df5 = df5[df5.Position != "GK"]
     df5 = df5.drop(columns=['Goalkeeping'])
 
-    League_filter5 = st.selectbox("League:", 
-                                df5['League'].unique())
+    Season_filter5 = st.selectbox("Season:", 
+                                df5['Season'].unique())
     
-    df5_LF = df5[df5['League']== League_filter5]
+    df5_SF = df5[df5['Season']== Season_filter5]
+
+    League_filter5 = st.selectbox("League:", 
+                                df5_SF['League'].unique())
+    
+    df5_LF = df5_SF[df5_SF['League']== League_filter5]
 
     Position_filter5 = st.selectbox("Position:", 
                                 df5_LF['Position'].unique())
@@ -478,16 +567,22 @@ elif page == "Graph - Simple Plot":
 
     df5_AF = df5_PF[(df5_PF['Age'] >= age_range5[0]) & (df5_PF['Age'] <= age_range5[1])]
 
+    teams5 = df5_AF['Team'].unique().tolist()
+    sorted_teams5 = sorted(teams5)
     TeamFilter5 = st.multiselect("Team Filter:",
-                                options=df5_AF["Team"].unique(),
-                                default=df5_AF["Team"].unique())
+                                options=sorted_teams5,
+                                default=sorted_teams5)
 
     if TeamFilter5:
         df5_TF = df5_AF[df5_AF["Team"].isin(TeamFilter5)]
 
     st.subheader("📊 Plot Settings")
-
-    allowed_metrics = ["Attack", "Possession", "Defense","Physical"]
+    st.info(
+    """
+    The color of the player plot reflects the color of their grade where :
+    Elite - S (Dark Green) to Very Poor - F (Red)
+    """, icon="ℹ️")
+    allowed_metrics = ["Goal-Scoring","Attack", "Possession", "Defense","Physical","Age"]
     variables = [m for m in allowed_metrics if m in df5_TF.columns]
     
     x_axis1 = st.selectbox("X-Axis (Horizontal)", 
@@ -543,10 +638,16 @@ elif page == "Graph - Interactive Plot":
     Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
     """, icon="ℹ️")
     st.subheader("🛠️ Player Settings")
-    League_filter6 = st.selectbox("League:", 
-                                df6['League'].unique())
+
+    Season_filter6 = st.selectbox("Season:", 
+                                df5['Season'].unique())
     
-    df6_LF = df6[df6['League']== League_filter6]
+    df6_SF = df6[df6['Season']== Season_filter6]
+
+    League_filter6 = st.selectbox("League:", 
+                                df6_SF['League'].unique())
+    
+    df6_LF = df6_SF[df6_SF['League']== League_filter6]
 
     Position_filter6 = st.selectbox("Position:", 
                                 df6_LF['Position'].unique())
