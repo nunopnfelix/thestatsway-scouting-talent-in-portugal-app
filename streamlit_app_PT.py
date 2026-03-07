@@ -482,7 +482,7 @@ elif page == "Lineup Builder":
     for pos, info in plot_data.items():
 
         grade_color = get_grade_color(info['grade'])
-        ax.set_title(f"{Team_filter4} - {Team_filter4} - {selected_formation}", color='Black', fontsize=16, fontweight='bold', pad=20)
+        ax.set_title(f"{Season_filter4} - {Team_filter4} - {selected_formation}", color='Black', fontsize=16, fontweight='bold', pad=20)
         ax.text(0.92, 0.98, "https://thestatsway-scouting-talent-in-portugal-app.streamlit.app/", transform=ax.transAxes, 
         color='Black', fontsize=7, fontweight='bold',
         ha='right', va='bottom', alpha=0.7)
@@ -626,7 +626,7 @@ elif page == "Graph - Simple Plot":
     st.download_button(
             label="📥 Download Lineup Image",
             data=buf.getvalue(),
-            file_name=f"{League_filter5}_{Position_filter5}_{x_axis1}_{y_axis1}_Analysis.png",
+            file_name=f"{Season_filter4}_{League_filter5}_{Position_filter5}_{x_axis1}_{y_axis1}_Analysis.png",
             mime="image/png")
     
 elif page == "Graph - Interactive Plot":
