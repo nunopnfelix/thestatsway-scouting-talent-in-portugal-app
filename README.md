@@ -8,7 +8,12 @@ This repository provides some tools designed for analysing and comparing footbal
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://thestatsway-scouting-talent-in-portugal-app.streamlit.app/)
  <br>
  
-# 🔎 Competitions:
+ # 🔎 Seasons:
+
+ • 2024/25 <br><br>
+ • 2025/26 <br><br>
+   <br>
+ # 🔎 Competitions:
 
  • Liga Portugal 2 <br><br>
  • Liga 3 <br><br>
@@ -25,7 +30,15 @@ This repository provides some tools designed for analysing and comparing footbal
  • AM & W: Attacking-Mids & Wingers <br><br>
  • CF: Centre-Fowards  <br><br>
  <br>
+
+# ℹ️ Player Output Metrics:
  
+  • The Player Output Metrics are calculation values adjusted for their position group.
+  • To calculate our outputs, we have done calculations based on the variables & weights that fall within each area that we considered relevant to that analysis.
+             
+    Example:
+        A Player (Centre-Back) with a High Goal-Scoring Output is one of the best players in his position group (CB) for that metric.
+<br>
 # ℹ️ Grading Values:
 
 Our Grade value is based on a formula that evaluates player data adjusted for their position group. <br>
