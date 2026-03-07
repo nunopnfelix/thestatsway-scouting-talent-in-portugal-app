@@ -33,12 +33,13 @@ This repository provides some tools designed for analysing and comparing footbal
 
 # ℹ️ Player Output Metrics:
  
-  • The Player Output Metrics are calculation values adjusted for their position group.
-  • To calculate our outputs, we have done calculations based on the variables & weights that fall within each area that we considered relevant to that analysis.
+  • The Player Output Metrics are calculation values adjusted for their position group.<br>
+  • To calculate our outputs, we have done calculations based on the variables & weights that fall within each area that we considered relevant to that analysis.<br>
              
     Example:
         A Player (Centre-Back) with a High Goal-Scoring Output is one of the best players in his position group (CB) for that metric.
 <br>
+
 # ℹ️ Grading Values:
 
 Our Grade value is based on a formula that evaluates player data adjusted for their position group. <br>
