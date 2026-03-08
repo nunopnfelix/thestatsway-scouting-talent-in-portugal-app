@@ -626,7 +626,7 @@ elif page == "Graph - Simple Plot":
     st.download_button(
             label="📥 Download Lineup Image",
             data=buf.getvalue(),
-            file_name=f"{Season_filter4}_{League_filter5}_{Position_filter5}_{x_axis1}_{y_axis1}_Analysis.png",
+            file_name=f"{Season_filter5}_{League_filter5}_{Position_filter5}_{x_axis1}_{y_axis1}_Analysis.png",
             mime="image/png")
     
 elif page == "Graph - Interactive Plot":
