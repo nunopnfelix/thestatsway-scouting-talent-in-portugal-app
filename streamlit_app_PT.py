@@ -10,6 +10,7 @@ from mplsoccer import VerticalPitch
 import matplotlib.pyplot as plt
 import io
 import seaborn as sns
+import matplotlib.gridspec as gridspec
 
 st.set_page_config(
     page_title="TheStatsWay",
@@ -51,9 +52,9 @@ grade_order = ['S', 'A', 'B', 'C', 'D', 'E', 'F']
 st.sidebar.divider()
 st.sidebar.header("🔍 Page Selection 🔍")
 st.sidebar.write("")
-page = st.sidebar.radio("Pages:", ["Instructions & Abbreviations","Player Stats - Player Overview","Player Stats - Team Overview","Player Comparison Tool","Lineup Builder","Graph - Simple Plot","Graph - Interactive Plot"])
+page = st.sidebar.radio("Pages:", ["Instructions & Abbreviations","Player Stats - Player Overview","Player Stats - Team Overview","Player Comparison Tool","Lineup Builder","Graph - Simple Plot","Graph - Interactive Plot","Player Report Card"])
 st.sidebar.divider()
-st.sidebar.write("𝐯𝟏.𝟎.𝟎𝟐")
+st.sidebar.write("𝐯𝟏.𝟎.𝟎𝟑")
 st.sidebar.write("Data Last Updated: Feb 11, 2025")
 
 df1 = df
@@ -62,6 +63,7 @@ df3 = df
 df4 = df
 df5 = df
 df6 = df
+df7 = df
 
 if page == "Instructions & Abbreviations":
     st.write("""---""")
@@ -482,7 +484,7 @@ elif page == "Lineup Builder":
     for pos, info in plot_data.items():
 
         grade_color = get_grade_color(info['grade'])
-        ax.set_title(f"{Season_filter4} - {Team_filter4} - {selected_formation}", color='Black', fontsize=16, fontweight='bold', pad=20)
+        ax.set_title(f"{Season_filter4} - {Team_filter4} - {selected_formation}", color='Black', fontsize=14, fontweight='bold', pad=20)
         ax.text(0.92, 0.98, "https://thestatsway-scouting-talent-in-portugal-app.streamlit.app/", transform=ax.transAxes, 
         color='Black', fontsize=7, fontweight='bold',
         ha='right', va='bottom', alpha=0.7)
@@ -697,3 +699,147 @@ elif page == "Graph - Interactive Plot":
 
     with st.expander("View Raw Data"):
         st.dataframe(df6_PF)
+
+elif page == "Player Report Card":
+    st.write("""---""")
+    st.title("7 - Player Report Card")
+    st.write("Create a player report card for the player you want.")
+    st.info(
+    """
+    Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
+    """, icon="ℹ️")
+    st.subheader("🛠️ Player Settings")
+
+    df7 = df7[df5.Position != "GK"]
+    df7 = df7.drop(columns=['Goalkeeping'])
+
+    variables7 = ['Goal-Scoring', 'Attack','Possession', 'Defense','Physical']
+
+    Season_filter7 = st.selectbox("Season:", 
+                                df7['Season'].unique())
+    
+    df7_SF = df7[df7['Season']== Season_filter7]
+
+    League_filter7 = st.selectbox("League:", 
+                                df7_SF['League'].unique())
+    
+    df7_LF = df7_SF[df7_SF['League']== League_filter7]
+
+    Team_filter7 = st.selectbox("Team:", 
+                                df7_LF['Team'].unique())
+    
+    df7_TF = df7_LF[df7_LF['Team']== Team_filter7]
+
+    Position_filter7 = st.selectbox("Position", 
+                                df7_TF['Position'].unique())
+    
+    df7_PF = df7_TF[df7_TF['Position']== Position_filter7]
+
+    selected_player7 = st.selectbox("Select Player to Generate Report", 
+                                    df7_PF['Player'])
+    
+    player_data = df7_PF[df7_PF['Player'] == selected_player7].iloc[0]
+    pos = player_data['Position']
+    pos_mean = df7_PF[df7_PF['Position'] == pos][variables7].mean()
+
+    st.write("""---""")
+    fig = plt.figure(figsize=(16, 9), facecolor='#0e1117')
+    gs = gridspec.GridSpec(1, 3, width_ratios=[2, 1.5, 2])
+
+    ax_text = fig.add_subplot(gs[1])          
+    ax_bar = fig.add_subplot(gs[0])           
+    ax_radar = fig.add_subplot(gs[2], polar=True) 
+
+    ax_bar.set_facecolor('#0e1117')
+    ax_text.axis('off')
+    ax_text.set_title("Player Information", color='white', pad=15, fontsize=14,fontweight='bold')
+
+    profile_lines = [
+        f"Name: {player_data['Player']}",
+        f"Team: {player_data.get('Team', 'N/A')}",
+        f"Age: {player_data.get('Age', 'N/A')}",
+        f"League: {player_data.get('League', 'N/A')}",
+        f"Season: {player_data.get('Season', 'N/A')}",
+        f"Position: {pos}"
+    ]
+
+    for i, line in enumerate(profile_lines):
+        ax_text.text(0.1, 0.90 - (i * 0.1), line, color='white', 
+                    fontsize=16, fontweight='bold', transform=ax_text.transAxes)
+
+    grade_text = f"Grade: {player_data['Grade']}"
+
+    ax_text.text(0.85, 0.15, 
+            grade_text, 
+            fontsize=35, 
+            fontweight='bold',
+            color='white', 
+            ha='right', 
+            va='bottom',
+            bbox=dict(
+                facecolor='#161a24',   
+                edgecolor='white',     
+                boxstyle='round,pad=0.5', 
+                alpha=0.8              
+            ))
+
+    colors = ["#E40000FF", "#0400F5", "#edf100", "#1eff00", "#f88800"]
+
+    ax_bar.set_xlim(0, 100)
+    ax_bar.set_xticks([0, 25, 50, 75, 100])
+    ax_bar.set_facecolor('#0e1117')
+
+    bars = ax_bar.barh(variables7, [player_data[v] for v in variables7], color=colors, alpha=0.8)
+    ax_bar.bar_label(bars, 
+                 padding=8,       
+                 color='white',      
+                 fontsize=10, 
+                 fontweight='bold',
+                 fmt='%.1f')
+    ax_bar.barh(variables7, [player_data[v] for v in variables7], color=colors, alpha=0.8)
+    ax_bar.axvline(x=0, color='white', linewidth=4, clip_on=False)  
+    ax_bar.set_title("Performance Output", color='white', pad=15, fontsize=14,fontweight='bold')
+    ax_bar.tick_params(colors='white', labelsize=10)
+    ax_bar.invert_yaxis() 
+    ax_bar.spines['top'].set_visible(True)
+    ax_bar.spines['right'].set_visible(False)
+    ax_bar.grid(axis='x', linestyle='--', alpha=0.2)
+
+    angles = np.linspace(0, 2 * np.pi, len(variables7), endpoint=False).tolist()
+    angles += angles[:1]
+    p_values = [player_data[v] for v in variables7] + [player_data[variables7[0]]]
+    m_values = [pos_mean[v] for v in variables7] + [pos_mean[variables7[0]]]
+
+    ax_radar.set_facecolor('#161a24')
+    ax_radar.plot(angles, p_values, color='#89ff3b', linewidth=2, label=selected_player7)
+    ax_radar.fill(angles, p_values, color='#89ff3b', alpha=0.25)
+    ax_radar.plot(angles, m_values, color='#ff3636', linestyle='--', linewidth=2, label='Avg')
+    ax_radar.set_ylim(0, 100)
+    ax_radar.set_yticks([25, 50, 75, 100]) 
+    ax_radar.set_yticklabels(["25", "50", "75", "100"], color="white", size=10,fontweight='bold')
+    ax_radar.set_xticks(angles[:-1])
+    ax_radar.set_xticklabels(variables7, color='white', size=11,fontweight='bold')
+    ax_radar.set_title("Player vs League Position Mean", color='white', pad=15, fontsize=14, y=1.165,fontweight='bold')
+
+    radar_pos = ax_radar.get_position()
+    ax_radar.set_position([radar_pos.x0, radar_pos.y0-0.25, radar_pos.width, radar_pos.height])
+
+    plt.suptitle(f"SCOUTING REPORT: {selected_player7.upper()}", 
+                color='white', fontsize=28, fontweight='bold', y=1.10)
+
+    legend = ax_radar.legend(loc='lower center', bbox_to_anchor=(0.5, -0.2), 
+                            ncol=2, facecolor='#0e1117', edgecolor='white')
+    plt.setp(legend.get_texts(), color='white')
+    plt.figtext(0.97, 0.05, "@TheStatsWay", ha="right", fontsize=12, color='white', fontweight='bold')
+
+    plt.tight_layout()
+    st.pyplot(fig)
+
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=300, bbox_inches="tight")
+
+    st.download_button(
+            label="📥 Download Player Report",
+            data=buf.getvalue(),
+            file_name=f"{Season_filter7}_{League_filter7}_{Position_filter7}_{selected_player7}_Analysis.png",
+            mime="image/png")
