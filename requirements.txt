@@ -6,3 +6,4 @@ plotly
 mplsoccer
 matplotlib
 seaborn
+sklearn
