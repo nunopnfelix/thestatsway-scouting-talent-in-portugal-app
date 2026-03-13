@@ -55,5 +55,5 @@ Therefore, we opted for the following intervals to this Grading System: <br><br>
  • F - Very Poor Output in the Competition  <br><br>
 <br>
 
-### Version: 𝐯𝟏.𝟎.𝟎𝟐
+### Version: 𝐯𝟏.𝟎.𝟎𝟒
 ### Data Last Updated: Feb 11, 2025
