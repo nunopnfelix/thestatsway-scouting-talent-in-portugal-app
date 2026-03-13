@@ -7,3 +7,5 @@ mplsoccer
 matplotlib
 seaborn
 sklearn
+sklearn.preprocessing
+sklearn.metrics.pairwise
