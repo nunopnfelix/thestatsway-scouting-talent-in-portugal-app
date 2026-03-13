@@ -6,6 +6,6 @@ plotly
 mplsoccer
 matplotlib
 seaborn
-sklearn
+scikit-learn
 sklearn.preprocessing
 sklearn.metrics.pairwise
