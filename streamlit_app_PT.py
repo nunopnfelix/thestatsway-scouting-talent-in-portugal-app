@@ -21,6 +21,25 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+with st.sidebar:
+
+    st.markdown("""
+        <div class='scout-profile'>
+            <h4 style='margin-top: 12px; color: #343A40;'>@TheStatsWay</h4>
+            <p style='color: #6C757D; font-size: 0.8rem;'>Football Data Analysis</p>
+            <div style='font-size: 0.8rem; color: #28a745;'>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<div class='sidebar-title'> </div>", unsafe_allow_html=True)
+    st.info("💡 **Page Selection:**")
+
+    page = st.sidebar.radio("Pages:", ["Instructions & Abbreviations","Player Stats - Player Overview","Player Stats - Team Overview","Player Comparison Tool",
+                                       "Lineup Builder","Plot","Interactive Plot","Player Report Card","Player Similarity Tool","Team Comparison Tool"],
+                                    label_visibility="collapsed")
+
+
 st.title('🔍 TheStatsWay - Scouting Talent in Portugal 🔍',
          text_alignment = "center")
 
@@ -52,54 +71,60 @@ def style_grade_column(val):
 grade_order = ['S', 'A', 'B', 'C', 'D', 'E', 'F']
 
 st.sidebar.divider()
-st.sidebar.header("🔍 Page Selection 🔍")
-st.sidebar.write("")
-page = st.sidebar.radio("Pages:", ["Instructions & Abbreviations","Player Stats - Player Overview","Player Stats - Team Overview","Player Comparison Tool","Lineup Builder","Graph - Simple Plot","Graph - Interactive Plot","Player Report Card","Player Similarity Tool"])
-st.sidebar.divider()
-st.sidebar.write("𝐯𝟏.𝟎.𝟎𝟒")
+st.sidebar.write("𝐯𝟏.𝟎.𝟎𝟓")
 st.sidebar.write("Data Last Updated: Feb 11, 2025")
 
 if page == "Instructions & Abbreviations":
     st.write("""---""")
     st.title("0 - Instructions & Abbreviations")
     st.write("")
+    st.info("Features Available:", icon="✅")
+    st.write("""      
+    - **Player Stats - Player Overview:** Browse through the players performance metrics.
+    - **Player Stats - Team Overview:** Browse through the players performance metrics for a specific team.
+    - **Player Comparison Tool:** Create a performance radar comparison on the outfield players based on our metrics.
+    - **Lineup Builder:** Create a teams lineup with the grades for the selected players.
+    - **Plot:** Create a plot with the desired combination of the variables.
+    - **Interactive Plot:** Create an interactive plot with the desired combination of the variables.
+    - **Player Report Card:** Create a player report card for the player you want.
+    - **Player Similarity Tool:** Find the players with the most similar data profile based on our metrics.
+    - **Team Comparison Tool:** Create a teams profile per position based on the mean values of the players.""")
+    st.write("""---""")
     st.info("Position Abreviations:", icon="ℹ️")
-    st.write("""---
-    Position Group:
-             
-    GK: Goalkeepers
-    CB: Centre-Backs
-    FB & WB: Full-Backs & Wing-Backs
-    MF: Midfielders
-    AM & W: Attacking-Mids & Wingers
-    CF: Centre-Fowards""")
+    st.write("""            
+    - **GK:** Goalkeepers
+    - **CB:** Centre-Backs
+    - **FB & WB:** Full-Backs & Wing-Backs
+    - **MF:** Midfielders
+    - **AM & W:** Attacking-Mids & Wingers
+    - **CF:** Centre-Fowards""")
     st.write("""---""")
     st.info("Player Output Metrics:", icon="ℹ️")
-    st.write("""---
+    st.write("""
     The Player Output Metrics are calculation values adjusted for their position group.
     To calculate our outputs, we have done calculations based on the variables & weights that fall within each area that we considered relevant to that analysis.
              
-    Example:
-        A Player (Centre-Back) with a High Goal-Scoring Output is one of the best players in his position group (CB) for that metric.""")
+    **Example:**
+        Player (Centre-Back) with a High Goal-Scoring Output is one of the best players in his position group (CB) for that metric.""")
     st.write("""---""")
     st.info("Grading Values:", icon="ℹ️")
-    st.write("""---
+    st.write("""
     Our Grade value is based on a formula that evaluates player data (our Player Metrics) adjusted for their position group.
     We normalize the data so that we scale the values to a standardized range.
     Therefore, we opted for the following intervals to this Grading System and respective colors:
              
-    S - Elite Output in the Competition (Dark Green)
-    A - Good Output in the Competition (Green)
-    B - Above Average Output in the Competition (Light Green)
-    C - Average Output in the Competition (Yellow)
-    D - Below Average Output in the Competition (Orange)
-    E - Poor Output in the Competition (Dark Orange)
-    F - Very Poor Output in the Competition (Red)""")
+    - **S -** Elite Output in the Competition (Dark Green)
+    - **A -** Good Output in the Competition (Green)
+    - **B -** Above Average Output in the Competition (Light Green)
+    - **C -** Average Output in the Competition (Yellow)
+    - **D -** Below Average Output in the Competition (Orange)
+    - **E -** Poor Output in the Competition (Dark Orange)
+    - **F -** Very Poor Output in the Competition (Red)""")
     st.write("""---""")
 
 elif page == "Player Stats - Player Overview":
     st.write("""---""")
-    st.title("1 - Player Overview")
+    st.title("1 - Player Stats - Player Overview")
     st.write("Browse through the players performance metrics.")
     st.info(
     """
@@ -163,10 +188,77 @@ elif page == "Player Stats - Player Overview":
                  hide_index=True,
                  height = 500)
 
+    filtered_df['Player Info'] = filtered_df['Player'] + " (" + filtered_df['Age'].astype(str) + ")"
+
+    if Position_filter == "GK":
+        report_cols = ['Team','Player Info', 'Goalkeeping','PosRank', 'Grade']
+        report_title = "Goalkeeper Scouting Report"
+    else:
+        report_cols = ['Team','Player Info', 'Goal-Scoring','Attack','Possession', 'Defense', 'Physical','PosRank', 'Grade']
+        report_title = f"{Position_filter.upper()} Scouting Report"
+
+    top_10_report = filtered_df.head(10)[report_cols]
+
+    st.write("---")
+
+    if st.button(f"🖼️ Generate {Position_filter} Table Image", icon=":material/image:"):
+    
+        if not top_10_report.empty:
+            
+            fig, ax = plt.subplots(figsize=(11, 7), facecolor='#F8F9FA')
+            ax.axis('off')
+
+            table = ax.table(
+                cellText=top_10_report.values, 
+                colLabels=top_10_report.columns, 
+                cellLoc='center', 
+                loc='center'
+            )
+            table.auto_set_font_size(False)
+            table.set_fontsize(10)
+            table.auto_set_column_width(col=list(range(len(top_10_report.columns))))
+            table.scale(1, 2.8)
+
+            for (row, col), cell in table.get_celld().items():
+                cell.set_edgecolor('#DEE2E6')
+                if row == 0:
+                    cell.set_text_props(weight='bold', color='white')
+                    cell.set_facecolor("#000000")
+                else:
+                    if row % 2 == 0:
+                        cell.set_facecolor('#FFFFFF')
+                    else:
+                        cell.set_facecolor("#F1F5F2")
+                    
+                    if top_10_report.columns[col] == 'Grade':
+                       grade_val = cell.get_text().get_text()
+                       bg_color = get_grade_color(grade_val)
+                       cell.set_facecolor(bg_color)
+                       cell.set_text_props(weight='bold', color='black')
+
+            plt.title(f" {Season_filter} - {League_filter} : {report_title}", 
+                    color="#000000", fontsize=18, fontweight='bold', pad=30)
+
+            plt.figtext(0.9, 0.05, "@TheStatsWay", 
+                        horizontalalignment='right', size=12, color="#000000", style='italic', fontweight='bold')
+
+            st.pyplot(fig)
+            st.success("Table generated successfully.")
+            buf = io.BytesIO()
+            fig.savefig(buf, format="png", dpi=300, bbox_inches="tight")
+
+            st.download_button(
+                    label="📥 Download Image",
+                    data=buf.getvalue(),
+                    file_name=f"{Season_filter} - {League_filter} : {report_title}.png",
+                    mime="image/png")
+        else:
+            st.warning("No players found in the current filter to generate a report.")
+  
 elif page == "Player Stats - Team Overview":
     st.write("""---""")
-    st.title("2 - Team Overview")
-    st.write("Browse through the players performance metrics in a specific team.")
+    st.title("2 - Player Stats - Team Overview")
+    st.write("Browse through the players performance metrics for a specific team.")
     st.info(
     """
     Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
@@ -219,10 +311,82 @@ elif page == "Player Stats - Team Overview":
                  hide_index=True,
                  height = 500)
     
+    filtered_df['Player Info'] = filtered_df['Player'] + " (" + filtered_df['Age'].astype(str) + ")"
+    report_cols = ['Player Info','Position', 'Goal-Scoring','Attack','Possession', 'Defense', 'Physical','Goalkeeping','PosRank', 'Grade']
+
+    top_23_report = filtered_df.head(23)[report_cols]
+    st.write("---")
+
+    if st.button(f"🖼️ Generate {Season_filter} - {League_filter} - {Team_filter} Report", icon=":material/image:"):
+        
+        if not top_23_report.empty:
+
+            num_rows = len(top_23_report)
+            dynamic_height = max((num_rows * 0.6) + 2, 4) 
+            
+            fig, ax = plt.subplots(figsize=(11, dynamic_height), facecolor='#F8F9FA')
+            ax.axis('off')
+
+            table = ax.table(
+                cellText=top_23_report.values, 
+                colLabels=top_23_report.columns, 
+                cellLoc='center', 
+                loc='center'
+            )
+
+            table.auto_set_font_size(False)
+            table.set_fontsize(10)
+            table.auto_set_column_width(col=list(range(len(top_23_report.columns))))
+            
+            for col_index in range(len(top_23_report.columns)):
+                current_w = table.get_celld()[(0, col_index)].get_width()
+                if current_w < 0.09:
+                    for row_index in range(num_rows + 1):
+                        table.get_celld()[(row_index, col_index)].set_width(0.09)
+
+            table.scale(1, 2.8)
+
+            for (row, col), cell in table.get_celld().items():
+                cell.set_edgecolor('#DEE2E6')
+                
+                if row == 0:
+                    cell.set_text_props(weight='bold', color='white')
+                    cell.set_facecolor("#000000")
+                else:
+                    cell.set_facecolor('#FFFFFF' if row % 2 == 0 else "#F1F5F2")
+                    
+                    if top_23_report.columns[col] == 'Grade':
+                        grade_val = cell.get_text().get_text()
+                        bg_color = get_grade_color(grade_val)
+                        cell.set_facecolor(bg_color)
+                        cell.set_text_props(weight='bold', color='black')
+
+            plt.title(f"{Season_filter} - {League_filter}: {Team_filter}", 
+                    color="#000000", fontsize=22, fontweight='bold', pad=20)
+
+            plt.figtext(0.9, 0.02, "@TheStatsWay", 
+                        horizontalalignment='right', size=12, color="#000000", style='italic', fontweight='bold')
+
+            plt.tight_layout()
+            st.pyplot(fig)
+            
+            buf = io.BytesIO()
+            fig.savefig(buf, format="png", dpi=300, bbox_inches="tight")
+            
+            st.download_button(
+                label="📥 Download Scouting Image",
+                data=buf.getvalue(),
+                file_name=f"Report_{Season_filter}_{Team_filter}.png",
+                mime="image/png"
+            )
+        else:
+            st.warning("No players found in the current filter.")
+
+
 elif page == "Player Comparison Tool":
     st.write("""---""")
-    st.title("3 - Player Head-to-Head")
-    st.write("Create a performance radar comparison on the outfield players based on our 4 metrics: Attack, Possession, Defense, Physical.")
+    st.title("3 - Player Comparison Tool")
+    st.write("Create a performance radar comparison on the outfield players based on our metrics.")
     st.info(
     """
     Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
@@ -337,10 +501,107 @@ elif page == "Player Comparison Tool":
                  hide_index=True,
                  height = 110)
 
+    comparison_df['Player Info'] = comparison_df.index + " (" + comparison_df['Age'].astype(str) + ")"
+    comparison_cols = ['Player Info', 'Team', 'Goal-Scoring', 'Attack', 'Possession', 'Defense', 'Physical', 'Grade']
+    report_data = comparison_df[comparison_cols]
+
+    st.write("---")
+
+    if st.button(f"🖼️ Generate H2H Report ({p1} vs {p2})", icon=":material/compare_arrows:"):
+        
+        if not report_data.empty:
+
+            num_vars = len(categories)
+            angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
+
+            angles += angles[:1]
+            stats1 += stats1[:1]
+            stats2 += stats2[:1]
+
+            fig_width = 10
+            fig_height = 10
+
+            fig = plt.figure(figsize=(fig_width, fig_height), facecolor='#F8F9FA')
+            
+            ax_radar = fig.add_subplot(2, 1, 1, polar=True)
+            ax_radar.set_theta_offset(np.pi / 2) 
+            ax_radar.set_theta_direction(-1) 
+
+            ax_radar.plot(angles, stats1, color='blue', linewidth=2, label=p1)
+            ax_radar.fill(angles, stats1, color='blue', alpha=0.25)
+
+            ax_radar.plot(angles, stats2, color='red', linewidth=2, label=p2)
+            ax_radar.fill(angles, stats2, color='red', alpha=0.25)
+
+            ax_radar.set_thetagrids(np.degrees(angles[:-1]), categories)
+            ax_radar.tick_params(axis='x', pad=15)
+            ax_radar.set_rlabel_position(0)
+            ax_radar.set_yticks([20, 40, 60, 80, 100])
+            ax_radar.set_yticklabels(["20", "40", "60", "80", "100"], color="grey", size=10)
+            ax_radar.set_ylim(0, 100)
+            ax_radar.grid(True, linestyle='--', color='lightgrey')
+            ax_radar.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
+ 
+            ax_table = fig.add_subplot(2, 1, 2)
+            ax_table.axis('off') 
+
+            table = ax_table.table(
+                cellText=report_data.values, 
+                colLabels=report_data.columns, 
+                cellLoc='center', 
+                loc='center'
+            )
+
+            table.auto_set_font_size(False)
+            table.set_fontsize(11)
+            table.auto_set_column_width(col=list(range(len(report_data.columns))))
+            
+            table.scale(1, 3.5)
+
+            for (row, col) in table.get_celld():
+                cell = table.get_celld()[(row, col)]
+                cell.set_edgecolor('#DEE2E6')
+                
+                if row == 0:
+                    cell.set_text_props(weight='bold', color='white')
+                    cell.set_facecolor("#000000")
+                else:
+                    if row == 1:
+                        cell.set_facecolor('#F0F7FF') 
+                    else:
+                        cell.set_facecolor('#FFF0F0') 
+
+                    if report_data.columns[col] == 'Grade':
+                        grade_val = cell.get_text().get_text()
+                        bg_color = get_grade_color(grade_val)
+                        cell.set_facecolor(bg_color)
+                        cell.set_text_props(weight='bold', color='black')
+
+            fig.suptitle(f"{p1} & {p2} Comparison", 
+                    color="#000000", fontsize=22, fontweight='bold', y=0.98)
+            
+            plt.figtext(0.5, 0.93, f"Season: {Season_filter} + League: {League_filter}", 
+                        fontsize=12, color="#000000", ha='center', style='italic')
+            
+            plt.figtext(0.9, 0.05, "@TheStatsWay", 
+                        horizontalalignment='right', size=12, color="#000000", style='italic', fontweight='bold')
+
+            plt.tight_layout(rect=[0, 0.03, 1, 0.95]) 
+            st.pyplot(fig)
+
+            buf = io.BytesIO()
+            fig.savefig(buf, format="png", dpi=300, bbox_inches="tight")
+            st.download_button(
+                label="📥 Download Comparison Image",
+                data=buf.getvalue(),
+                file_name=f"H2H_Comparison_{p1}_vs_{p2}.png",
+                mime="image/png"
+            )
+
 elif page == "Lineup Builder":
     st.write("""---""")
-    st.title("4 - Build Your Teams Eleven")
-    st.write("Create a teams lineup graph with their grades.")
+    st.title("4 - Lineup Builder")
+    st.write("Create a teams lineup with the grades for the selected players.")
     st.info(
     """
     Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
@@ -525,10 +786,10 @@ elif page == "Lineup Builder":
             file_name=f"{Team_filter}_lineup.png",
             mime="image/png")
     
-elif page == "Graph - Simple Plot":
+elif page == "Plot":
     st.write("""---""")
-    st.title("5 - Build Your Graph")
-    st.write("Create a graph with the desired combination of the variables.")
+    st.title("5 - Simple Plot")
+    st.write("Create a plot with the desired combination of the variables.")
     st.info(
     """
     Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
@@ -625,10 +886,10 @@ elif page == "Graph - Simple Plot":
             file_name=f"{Season_filter}_{League_filter}_{Position_filter}_{x_axis}_{y_axis}_Analysis.png",
             mime="image/png")
     
-elif page == "Graph - Interactive Plot":
+elif page == "Interactive Plot":
     st.write("""---""")
-    st.title("6 - Build Your Graph")
-    st.write("Create an interactive graph with the desired combination of the variables.")
+    st.title("6 - Interactive Plot")
+    st.write("Create an interactive plot with the desired combination of the variables.")
     st.info(
     """
     Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
@@ -737,7 +998,7 @@ elif page == "Player Report Card":
     
     player_data = df_PF[df_PF['Player'] == selected_player].iloc[0]
     pos = player_data['Position']
-    pos_mean = df_LF[df_LF['Position'] == pos][variables].mean() #Season League filter only
+    pos_mean = df_LF[df_LF['Position'] == pos][variables].mean()
 
     st.write("""---""")
     fig = plt.figure(figsize=(16, 9), facecolor='#0e1117')
@@ -821,7 +1082,7 @@ elif page == "Player Report Card":
     radar_pos = ax_radar.get_position()
     ax_radar.set_position([radar_pos.x0, radar_pos.y0-0.25, radar_pos.width, radar_pos.height])
 
-    plt.suptitle(f"SCOUTING REPORT: {selected_player.upper()}", 
+    plt.suptitle(f"Scouting Report: {selected_player.upper()}", 
                 color='white', fontsize=28, fontweight='bold', y=1.10)
 
     legend = ax_radar.legend(loc='lower center', bbox_to_anchor=(0.5, -0.2), 
@@ -844,7 +1105,7 @@ elif page == "Player Report Card":
 elif page == "Player Similarity Tool":
     st.write("""---""")
     st.title("8 - Player Similarity Tool")
-    st.write("Find the 10 players with the most similar profile based on the 5 performance pillars.")
+    st.write("Find the players with the most similar data profile based on our metrics.")
     st.info(
     """
     Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
@@ -887,42 +1148,210 @@ elif page == "Player Similarity Tool":
 
     sim_features = ['Attack', 'Goal-Scoring', 'Defense', 'Possession', 'Physical']
 
-    def find_similar_players(df_supp_pos, target_player, top_n=10):
-        
+    st.write("""---""")
+    st.subheader("🛠️ Similar Profiles - Age Filter")
+
+    min_age = int(df_supp_pos['Age'].min())
+    max_age = int(df_supp_pos['Age'].max())
+
+    age_range = st.slider("Age Range for the Similar Profiles to display:",
+                        min_value=min_age,
+                        max_value=max_age,
+                        value=(min_age, max_age))
+
+    st.subheader("⤵️ Search Button")
+
+    def find_similar_players(df_supp_pos, target_player, target_season, top_n=10):
         df_sim = df_supp_pos.dropna(subset=sim_features).copy()
+        
         scaler = StandardScaler()
         scaled_data = scaler.fit_transform(df_sim[sim_features])
         
         try:
-            player_idx = df_sim[df_sim['Player'] == target_player].index[0]
+            target_row = df_sim[(df_sim['Player'] == target_player) & 
+                                (df_sim['Season'] == target_season)]
+            
+            if target_row.empty:
+                return None
+                
+            player_idx = target_row.index[0]
             pos_idx = df_sim.index.get_loc(player_idx)
             target_vector = scaled_data[pos_idx].reshape(1, -1)
-        except IndexError:
+            
+        except (IndexError, KeyError):
             return None
         
         similarity_matrix = cosine_similarity(target_vector, scaled_data)
         df_sim['Similarity_Score'] = similarity_matrix.flatten()
-        results = df_sim[df_sim['Player'] != target_player]
+        results = df_sim.drop(index=player_idx)
+        
+        results = results[(results['Age'] >= age_range[0]) & (results['Age'] <= age_range[1])]
+        results = results[(results['Similarity_Score'] > 0)]
         results = results.sort_values(by='Similarity_Score', ascending=False)
         
         return results.head(top_n)
 
-    st.write("""---""")
-    st.subheader("⤵️ Search Button")
-
-    if st.button("Find Similar Profiles"):
-        with st.spinner('Analyzing player vectors...'):
-            similar_df = find_similar_players(df_supp_pos, selected_player)
+    if st.button("🔍 Find Similar Profiles"):
+        with st.spinner(f'Analyzing {selected_player}\'s DNA in the {Season_filter} season...'):
+            
+            similar_df = find_similar_players(df_supp_pos, selected_player, Season_filter)
             
             if similar_df is not None:
-                st.write(f"### Top 10 Players with the Most Similar Profile to {selected_player}:")
-                display_df = similar_df[['Season','League','Team','Player','Age', 'Position', 'Similarity_Score']].copy()
+                st.write(f"### Top 10 Similar Profiles to {selected_player} ({Season_filter}):")
+                
+                display_cols = ['Season', 'League', 'Team', 'Player', 'Age', 'Position', 'Similarity_Score']
+                display_df = similar_df[display_cols].copy()
                 display_df['Similarity Accuracy'] = (display_df['Similarity_Score'] * 100).map('{:,.1f}%'.format)
-                st.dataframe(display_df[['Season','League','Team','Player', 'Age', 'Position', 'Similarity Accuracy']], 
-                             hide_index=True,
-                             width='stretch')
-                best_match = display_df.iloc[0]['Player']
-                st.success(f"**Scout's Note:** {best_match} is the best stylistic match in our dataset at {display_df.iloc[0]['Similarity Accuracy']} similarity.")
+                
+                st.dataframe(
+                    display_df[['Season', 'League', 'Team', 'Player', 'Age', 'Position', 'Similarity Accuracy']], 
+                    hide_index=True,
+                    width='stretch'
+                )
+                
+                top_row = display_df.iloc[0]
+                best_match_name = top_row['Player']
+                best_match_season = top_row['Season']
+                accuracy = top_row['Similarity Accuracy']
+                
+                note_text = f" **{best_match_name} ({best_match_season})** is the best stylistic match in this condition at **{accuracy}** similarity."
+                
+                st.success(note_text)
+                
+                num_rows = len(display_df)
+                dynamic_height = max((num_rows * 0.6) + 2.5, 4)
+                
+                fig, ax = plt.subplots(figsize=(10, dynamic_height), facecolor='#F8F9FA')
+                ax.axis('off')
+
+                display_df['Player Info'] = display_df['Player'] + " (" + display_df['Age'].astype(str) + ")"
+                plot_df = display_df[['Season', 'League', 'Team', 'Player Info', 'Position', 'Similarity Accuracy']]
+
+                table = ax.table(
+                    cellText=plot_df.values, 
+                    colLabels=plot_df.columns, 
+                    cellLoc='center', 
+                    loc='center'
+                )
+
+                table.auto_set_font_size(False)
+                table.set_fontsize(10)
+                table.auto_set_column_width(col=list(range(len(plot_df.columns))))
+                table.scale(1.4, 2.8) 
+                
+                for (row, col), cell in table.get_celld().items():
+                    cell.set_edgecolor('#DEE2E6')
+
+                    if row == 0:
+                        cell.set_text_props(weight='bold', color='white')
+                        cell.set_facecolor("#000000")
+                    else:
+                        cell.set_facecolor('#FFFFFF' if row % 2 == 0 else "#F1F5F2")
+                        
+                        if plot_df.columns[col] == 'Similarity Accuracy':
+                            cell.set_text_props(weight='bold', color='#1A73E8') 
+
+                plt.title(f"Most Similar Data Profile to {selected_player} ({Season_filter})", 
+                      color="#000000", fontsize=16, fontweight='bold', pad=30, y=0.92)
+            
+                plt.figtext(0.9, 0.05, "@TheStatsWay", 
+                            horizontalalignment='right', size=12, color="#000000", style='italic', fontweight='bold')
+
+                plt.tight_layout()
+                st.pyplot(fig)
+
+                buf = io.BytesIO()
+                fig.savefig(buf, format="png", dpi=300, bbox_inches="tight")
+                st.download_button(
+                    label="📥 Download Similarity Report",
+                    data=buf.getvalue(),
+                    file_name=f"Similarity_{selected_player}_{Season_filter}.png",
+                    mime="image/png"
+            )
                 
             else:
-                st.error("Error: Player data incomplete for the 5 required variables.")
+                st.error(f"**Data Gap:** We don't have enough performance data for {selected_player} in the {Season_filter} season to generate a vector.")
+
+
+elif page == "Team Comparison Tool":
+    st.write("""---""")
+    st.title("9 - Team Comparison Tool")
+    st.write("Create a teams profile per position based on the mean values of the players.")
+    st.info(
+    """
+    Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
+    """, icon="ℹ️")
+
+    st.subheader("🛠️ Team Settings")
+
+    sim_features = ['Goal-Scoring', 'Attack', 'Possession', 'Defense', 'Physical']
+
+    s_filt = st.selectbox("Select Season:", df['Season'].unique(), key='heatmap_s')
+    l_filt = st.selectbox("Select League:", df[df['Season']==s_filt]['League'].unique(), key='heatmap_l')
+
+    df_filtered = df[(df['Season'] == s_filt) & (df['League'] == l_filt)]
+
+    team_pos_mean = df_filtered.groupby(['Team', 'Position'])[sim_features].mean().reset_index()
+    pos_to_view = st.selectbox("Compare Teams by Position Group:", team_pos_mean['Position'].unique())
+
+    heatmap_data = team_pos_mean[team_pos_mean['Position'] == pos_to_view].set_index('Team')[sim_features]
+
+    t_col1, t_col2 = st.columns(2)
+    with t_col1:
+        show_median = st.toggle("📊 Show League Median", value=False)
+    with t_col2:
+        show_mean = st.toggle("📈 Show League Mean", value=False)
+
+    if show_mean and not heatmap_data.empty:
+        mean_val = heatmap_data.mean()
+        mean_df = pd.DataFrame([mean_val], columns=sim_features, index=['League Mean'])
+        heatmap_data = pd.concat([heatmap_data, mean_df])
+
+    if show_median and not heatmap_data.empty:
+        median_val = heatmap_data.median()
+        median_df = pd.DataFrame([median_val], columns=sim_features, index=['League Median'])
+        heatmap_data = pd.concat([heatmap_data, median_df])
+
+    if not heatmap_data.empty:
+        st.write("""---""")
+        fig, ax = plt.subplots(figsize=(12, len(heatmap_data) * 0.5 + 2), facecolor='#0e1117')
+        ax.set_facecolor('#0e1117')
+
+        sns.heatmap(heatmap_data, 
+                    annot=True, 
+                    fmt=".1f", 
+                    cmap="RdYlGn", 
+                    ax=ax, 
+                    cbar=False,
+                    annot_kws={"weight": "bold", "size": 11})
+
+        plt.title(f"{l_filt} - {pos_to_view} Profile ({s_filt})", 
+                color='white', fontsize=18, pad=60, fontweight='bold')
+        
+        ax.xaxis.tick_top()
+        ax.xaxis.set_label_position('top')
+        ax.tick_params(axis='x', colors='white', labelsize=12, pad=15)
+        ax.tick_params(axis='y', colors='white', labelsize=12)
+        
+        ax.set_xlabel("") 
+        ax.set_ylabel("")
+
+        for i, name in enumerate(heatmap_data.index):
+            if name in ['League Mean', '📊 Show League Median']:
+                ax.add_patch(plt.Rectangle((0, i), len(sim_features), 1, 
+                                        fill=False, edgecolor='white', lw=3, ls='--'))
+
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+
+        plt.figtext(0.97, -0.01, "@TheStatsWay", ha="right", fontsize=12, color='white', fontweight='bold')
+        plt.tight_layout()
+        st.pyplot(fig)
+
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", dpi=300, bbox_inches="tight")
+        st.download_button(
+                label="📥 Download Team Comparison Report",
+                data=buf.getvalue(),
+                file_name=f"Team_Comparison_{s_filt}_{l_filt}_{pos_to_view}.png",
+                mime="image/png")
