@@ -56,11 +56,11 @@ Therefore, we opted for the following intervals to this Grading System: <br><br>
 <br>
 
 ### Version: 𝐯𝟏.𝟎.𝟎𝟔
-### Data Last Updated: Mar 12, 2025
-<br>
-  <br>
+### Data Last Updated: Mar 12, 2025 <br><br>
 
-### Version updates:
+<br>
+
+## Version updates:
 
 💻 𝐯𝟏.𝟎.𝟎𝟏
 
