@@ -57,3 +57,45 @@ Therefore, we opted for the following intervals to this Grading System: <br><br>
 
 ### Version: 𝐯𝟏.𝟎.𝟎𝟔
 ### Data Last Updated: Mar 12, 2025
+
+
+### Version updates:
+
+💻 𝐯𝟏.𝟎.𝟎𝟏
+
+New Pages:
+
+- Lineup Builder
+- Graph - Simple Plot
+- Graph - Interactive Plot
+
+💻 𝐯𝟏.𝟎.𝟎𝟐
+
+New Updates:
+
+- Included the 2024/25 Season for Liga 3 and Liga Revelação U23;
+- New variable: Goal-Scoring;
+- Included the Grade Color in the tables so it is easier to spot and differentiate;
+
+💻 𝐯𝟏.𝟎.𝟎𝟑
+
+One more new thing ready! Now you can select a player and get their report card on the following page:
+- Player Report Card
+
+💻 𝐯𝟏.𝟎.𝟎𝟒
+
+In this update, some corrections and improvements have been done. 
+Now you have a tool to search for the most similar profiles to a player based on the outputs.
+
+💻 𝐯𝟏.𝟎.𝟎𝟓
+
+- New Page: Team Comparison Tool!
+- Added a Age Range for Similar Profiles search.
+- Added Grafs for tables so that we can export dataframes easily.
+- More corrections and improvements have been done!
+
+💻 𝐯𝟏.𝟎.𝟎𝟔
+
+- Added data regarding Liga Portugal & Liga 2 from 2024/25 (fun to use with the Player Similarity Tool)
+- Corrected problem with the Age Filter in Team Comparison Tool.
+- New Data Updates for this season.
