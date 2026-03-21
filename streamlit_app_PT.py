@@ -71,7 +71,7 @@ def style_grade_column(val):
 grade_order = ['S', 'A', 'B', 'C', 'D', 'E', 'F']
 
 st.sidebar.divider()
-st.sidebar.write("𝐯𝟏.𝟎.𝟎𝟓")
+st.sidebar.write("𝐯𝟏.𝟎.𝟎𝟔")
 st.sidebar.write("Data Last Updated: Feb 11, 2025")
 
 if page == "Instructions & Abbreviations":
