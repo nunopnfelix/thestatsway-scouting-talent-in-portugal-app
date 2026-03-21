@@ -128,7 +128,7 @@ elif page == "Player Stats - Player Overview":
     st.write("Browse through the players performance metrics.")
     st.info(
     """
-    Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
+    Liga Portugal  -  Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
     """, icon="ℹ️")
     st.subheader("🛠️ Player Settings")
 
@@ -261,7 +261,7 @@ elif page == "Player Stats - Team Overview":
     st.write("Browse through the players performance metrics for a specific team.")
     st.info(
     """
-    Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
+    Liga Portugal  -  Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
     """, icon="ℹ️")
 
     st.subheader("🛠️ Player Settings")
@@ -389,7 +389,7 @@ elif page == "Player Comparison Tool":
     st.write("Create a performance radar comparison on the outfield players based on our metrics.")
     st.info(
     """
-    Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
+    Liga Portugal  -  Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
     """, icon="ℹ️")
 
     st.subheader("🛠️ Player Settings")
@@ -604,7 +604,7 @@ elif page == "Lineup Builder":
     st.write("Create a teams lineup with the grades for the selected players.")
     st.info(
     """
-    Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
+    Liga Portugal  -  Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
     """, icon="ℹ️")
     
     formations = {
@@ -792,7 +792,7 @@ elif page == "Plot":
     st.write("Create a plot with the desired combination of the variables.")
     st.info(
     """
-    Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
+    Liga Portugal  -  Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
     """, icon="ℹ️")
     st.subheader("🛠️ Player Settings")
     
@@ -892,7 +892,7 @@ elif page == "Interactive Plot":
     st.write("Create an interactive plot with the desired combination of the variables.")
     st.info(
     """
-    Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
+    Liga Portugal  -  Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
     """, icon="ℹ️")
     st.subheader("🛠️ Player Settings")
 
@@ -961,7 +961,7 @@ elif page == "Player Report Card":
     st.write("Create a player report card for the player you want.")
     st.info(
     """
-    Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
+    Liga Portugal  -  Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
     """, icon="ℹ️")
     st.subheader("🛠️ Player Settings")
 
@@ -1108,7 +1108,7 @@ elif page == "Player Similarity Tool":
     st.write("Find the players with the most similar data profile based on our metrics.")
     st.info(
     """
-    Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
+    Liga Portugal  -  Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
     """, icon="ℹ️")
     st.subheader("🛠️ Player Settings")
 
@@ -1280,7 +1280,7 @@ elif page == "Team Comparison Tool":
     st.write("Create a teams profile per position based on the mean values of the players.")
     st.info(
     """
-    Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
+    Liga Portugal  -  Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
     """, icon="ℹ️")
 
     df = df[df.Position != "GK"]
