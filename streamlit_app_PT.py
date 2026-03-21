@@ -72,7 +72,7 @@ grade_order = ['S', 'A', 'B', 'C', 'D', 'E', 'F']
 
 st.sidebar.divider()
 st.sidebar.write("𝐯𝟏.𝟎.𝟎𝟓")
-st.sidebar.write("Data Last Updated: Mar 12, 2025")
+st.sidebar.write("Data Last Updated: Feb 11, 2025")
 
 if page == "Instructions & Abbreviations":
     st.write("""---""")
@@ -1145,6 +1145,7 @@ elif page == "Player Similarity Tool":
 
     df_supp = df
     df_supp_pos = df_supp[df_supp['Position']== Position_filter]
+    df_supp_pos = df_supp_pos.dropna(subset=['Age'])
 
     sim_features = ['Attack', 'Goal-Scoring', 'Defense', 'Possession', 'Physical']
 
@@ -1281,6 +1282,9 @@ elif page == "Team Comparison Tool":
     """
     Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
     """, icon="ℹ️")
+
+    df = df[df.Position != "GK"]
+    df = df.drop(columns=['Goalkeeping'])
 
     st.subheader("🛠️ Team Settings")
 
