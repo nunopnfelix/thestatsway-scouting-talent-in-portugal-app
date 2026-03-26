@@ -89,7 +89,7 @@ if page == "Instructions & Abbreviations":
     - **Player Report Card:** Create a player report card for the player you want.
     - **Player Similarity Tool:** Find the players with the most similar data profile based on our metrics.
     - **Team Comparison Tool:** Create a teams profile per position based on the mean values of the players.
-    - **Player Progression in a Team:**Review and analyze a players trajectory in the same team from the 2024/25 season to the 2025/26 season.""")
+    - **Player Progression in a Team:** Review and analyze a players trajectory in the same team from the 2024/25 season to the 2025/26 season.""")
     st.write("""---""")
     st.info("Position Abreviations:", icon="ℹ️")
     st.write("""            
