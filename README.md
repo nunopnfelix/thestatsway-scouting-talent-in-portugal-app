@@ -106,3 +106,9 @@ Now you have a tool to search for the most similar profiles to a player based on
 💻 𝐯𝟏.𝟎.𝟎𝟕
 
 - Added a new page where you can create a report on a Player's Progression in a Team from the 2024/25 Season to the 2025/26 Season.
+
+💻 𝐯𝟏.𝟎.𝟎𝟖
+
+- Player Search Hub: a new page where you can find players that match your performance requirements.
+- Added data regarding Liga Portugal, Liga 2 & Liga 3 from 2023/24.
+- More corrections & improvements.
