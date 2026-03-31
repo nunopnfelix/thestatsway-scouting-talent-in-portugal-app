@@ -10,8 +10,9 @@ This repository provides some tools designed for analysing and comparing footbal
  
  # 🔎 Seasons:
 
- • 2024/25 <br><br>
  • 2025/26 <br><br>
+ • 2024/25 <br><br>
+ • 2023/24 <br><br>
    <br>
  # 🔎 Competitions:
 
@@ -56,7 +57,7 @@ Therefore, we opted for the following intervals to this Grading System: <br><br>
  • F - Very Poor Output in the Competition  <br><br>
 <br>
 
-### Version: 𝐯𝟏.𝟎.𝟎𝟔
+### Version: 𝐯𝟏.𝟎.𝟎𝟖
 ### Data Last Updated: Mar 12, 2026 <br><br>
 
 <br>
@@ -101,3 +102,7 @@ Now you have a tool to search for the most similar profiles to a player based on
 - Added data regarding Liga Portugal & Liga 2 from 2024/25 (fun to use with the Player Similarity Tool)
 - Corrected problem with the Age Filter in Team Comparison Tool.
 - New Data Updates for this season.
+
+💻 𝐯𝟏.𝟎.𝟎𝟕
+
+- Added a new page where you can create a report on a Player's Progression in a Team from the 2024/25 Season to the 2025/26 Season.
