@@ -36,7 +36,8 @@ with st.sidebar:
     st.info("💡 **Page Selection:**")
 
     page = st.sidebar.radio("Pages:", ["Instructions & Abbreviations","Player Stats - Player Overview","Player Stats - Team Overview","Player Comparison Tool",
-                                       "Lineup Builder","Plot","Interactive Plot","Player Report Card","Player Similarity Tool","Team Comparison Tool","Player Progression in a Team"],
+                                       "Lineup Builder","Scatter Plot","Interactive Plot","Player Report Card","Player Similarity Tool","Team Comparison Tool","Player Progression in a Team",
+                                       "Player Search Hub"],
                                     label_visibility="collapsed")
 
 
@@ -71,7 +72,7 @@ def style_grade_column(val):
 grade_order = ['S', 'A', 'B', 'C', 'D', 'E', 'F']
 
 st.sidebar.divider()
-st.sidebar.write("𝐯𝟏.𝟎.𝟎𝟕")
+st.sidebar.write("𝐯𝟏.𝟎.𝟎𝟖")
 st.sidebar.write("Data Last Updated: Mar 12, 2026")
 
 if page == "Instructions & Abbreviations":
@@ -84,12 +85,13 @@ if page == "Instructions & Abbreviations":
     - **Player Stats - Team Overview:** Browse through the players performance metrics for a specific team.
     - **Player Comparison Tool:** Create a performance radar comparison on the outfield players based on our metrics.
     - **Lineup Builder:** Create a teams lineup with the grades for the selected players.
-    - **Plot:** Create a plot with the desired combination of the variables.
+    - **Scatter Plot:** Create a plot with the desired combination of the variables.
     - **Interactive Plot:** Create an interactive plot with the desired combination of the variables.
     - **Player Report Card:** Create a player report card for the player you want.
     - **Player Similarity Tool:** Find the players with the most similar data profile based on our metrics.
     - **Team Comparison Tool:** Create a teams profile per position based on the mean values of the players.
-    - **Player Progression in a Team:** Review and analyze a players trajectory in the same team from the 2024/25 season to the 2025/26 season.""")
+    - **Player Progression in a Team:** Review and analyze a player’s trajectory in the same team.
+    - **Player Search Hub:** Find players that match your performance requirements.""")
     st.write("""---""")
     st.info("Position Abreviations:", icon="ℹ️")
     st.write("""            
@@ -445,13 +447,11 @@ elif page == "Player Comparison Tool":
     
     with col3:       
         p1 = st.selectbox("Select Player 1", 
-                          sorted_players3, 
-                          index=0)
+                          sorted_players3)
 
     with col4:
         p2 = st.selectbox("Select Player 2", 
-                          sorted_players4, 
-                          index=1)
+                          sorted_players4)
 
     categories = ['Goal-Scoring', 'Attack', 'Possession', 'Defense', 'Physical']
 
@@ -696,87 +696,87 @@ elif page == "Lineup Builder":
 
     footer_tag = "@TheStatsWay"
 
+         
     selected_formation = st.selectbox("Choose Formation", 
-                                    options=list(formations.keys()), 
-                                    on_change=reset_lineup)
+                                        options=list(formations.keys()), 
+                                        on_change=reset_lineup)
 
-
+        #st.title(f"Formation Selected: {selected_formation}")
+        
     plot_data = {}
 
     for pos,coords in formations[selected_formation].items():
 
-        broad_category = PositionIndex.get(pos)
-    
-        filtered_players = df_TF[df_TF['Position'] == broad_category]['Player'].tolist()
-
-        taken_elsewhere = [name for p, name in st.session_state.lineup.items() if p != pos]
-        available = [p for p in filtered_players if p not in taken_elsewhere]
-
-        current_selection = st.session_state.lineup.get(pos, "Select Player")
+            broad_category = PositionIndex.get(pos)
         
-        if current_selection not in available:
-            current_selection = "Select Player"
+            filtered_players = df_TF[df_TF['Position'] == broad_category]['Player'].tolist()
 
-        choice = st.selectbox(f"{pos}", 
-                            options=["Select Player"] + available,
-                            index=0 if current_selection == "Select Player" else available.index(current_selection) + 1,
-                            key=f"sel_{selected_formation}_{pos}")
+            taken_elsewhere = [name for p, name in st.session_state.lineup.items() if p != pos]
+            available = [p for p in filtered_players if p not in taken_elsewhere]
 
-        if choice != "Select Player":
-            st.session_state.lineup[pos] = choice
-            grade = df_TF[df_TF['Player'] == choice]['Grade'].iloc[0]
-            plot_data[pos] = {"name": choice, 
-                              "grade": grade, 
-                              "x": coords[0], 
-                              "y": coords[1]}
-        
-    st.title(f"Formation Selected: {selected_formation}")
+            current_selection = st.session_state.lineup.get(pos, "Select Player")
+            
+            if current_selection not in available:
+                current_selection = "Select Player"
 
+            choice = st.selectbox(f"{pos}", 
+                                options=["Select Player"] + available,
+                                index=0 if current_selection == "Select Player" else available.index(current_selection) + 1,
+                                key=f"sel_{selected_formation}_{pos}")
+
+            if choice != "Select Player":
+                st.session_state.lineup[pos] = choice
+                grade = df_TF[df_TF['Player'] == choice]['Grade'].iloc[0]
+                plot_data[pos] = {"name": choice, 
+                                "grade": grade, 
+                                "x": coords[0], 
+                                "y": coords[1]}
+            
     pitch = VerticalPitch(pitch_type='statsbomb', 
-                          pitch_color="#1a7953", 
-                          line_color='#c7d5cc')
+                            pitch_color="#1a7953", 
+                            line_color='#c7d5cc')
     fig, ax = pitch.draw(figsize=(6, 7))
 
     for pos, info in plot_data.items():
 
-        grade_color = get_grade_color(info['grade'])
-        ax.set_title(f"{Season_filter} - {Team_filter} - {selected_formation}", color='Black', fontsize=14, fontweight='bold', pad=20)
-        ax.text(0.92, 0.98, "https://thestatsway-scouting-talent-in-portugal-app.streamlit.app/", transform=ax.transAxes, 
-        color='Black', fontsize=7, fontweight='bold',
-        ha='right', va='bottom', alpha=0.7)
-                
-        pitch.scatter(info['x'], 
-                      info['y'], 
-                      c=grade_color,
-                      s=800,  
-                      edgecolors='white', 
-                      linewidth=1, 
-                      ax=ax, 
-                      zorder=3)
-    
-        pitch.annotate(str(info['grade']), 
-                    xy=(info['x'], info['y']), 
-                    va='center', ha='center', 
-                    color='black', fontsize=14, fontweight='bold', ax=ax, zorder=4)
+            grade_color = get_grade_color(info['grade'])
+            ax.set_title(f"{Season_filter} - {Team_filter} - {selected_formation}", color='Black', fontsize=14, fontweight='bold', pad=20)
+            ax.text(0.92, 0.98, "https://thestatsway-scouting-talent-in-portugal-app.streamlit.app/", transform=ax.transAxes, 
+            color='Black', fontsize=7, fontweight='bold',
+            ha='right', va='bottom', alpha=0.7)
+                    
+            pitch.scatter(info['x'], 
+                        info['y'], 
+                        c=grade_color,
+                        s=800,  
+                        edgecolors='white', 
+                        linewidth=1, 
+                        ax=ax, 
+                        zorder=3)
         
-        pitch.annotate(info['name'], xy=(info['x'] - 6, info['y']), 
-                    va='center', ha='center', color='black', 
-                    fontsize=10, fontweight='bold', ax=ax, zorder=4)
-    
-        pitch.annotate(pos, xy=(info['x'] - 9, info['y']), 
-                    va='center', ha='center', color="black",
-                    fontsize=9, ax=ax, zorder=4)
+            pitch.annotate(str(info['grade']), 
+                        xy=(info['x'], info['y']), 
+                        va='center', ha='center', 
+                        color='black', fontsize=14, fontweight='bold', ax=ax, zorder=4)
+            
+            pitch.annotate(info['name'], xy=(info['x'] - 6, info['y']), 
+                        va='center', ha='center', color='black', 
+                        fontsize=10, fontweight='bold', ax=ax, zorder=4)
         
-        pitch.annotate(pos, 
-                    xy=(info['x'] - 9, info['y']), 
-                    va='center', ha='center', color="black",
-                    fontsize=9, ax=ax, zorder=4)
+            pitch.annotate(pos, xy=(info['x'] - 9, info['y']), 
+                        va='center', ha='center', color="black",
+                        fontsize=9, ax=ax, zorder=4)
+            
+            pitch.annotate(pos, 
+                        xy=(info['x'] - 9, info['y']), 
+                        va='center', ha='center', color="black",
+                        fontsize=9, ax=ax, zorder=4)
 
-        ax.text(0.9475, 0.04, footer_tag, transform=ax.transAxes, 
-        color='Black', fontsize=7, fontweight='bold',
-        ha='right', va='bottom', alpha=0.7)
+            ax.text(0.9475, 0.04, footer_tag, transform=ax.transAxes, 
+            color='Black', fontsize=7, fontweight='bold',
+            ha='right', va='bottom', alpha=0.7)
 
-    st.pyplot(fig)
+            st.pyplot(fig)
 
     buf = io.BytesIO()
     fig.savefig(buf, format="png", dpi=300, bbox_inches="tight")
@@ -786,10 +786,12 @@ elif page == "Lineup Builder":
             data=buf.getvalue(),
             file_name=f"{Team_filter}_lineup.png",
             mime="image/png")
-    
-elif page == "Plot":
+
+
+        
+elif page == "Scatter Plot":
     st.write("""---""")
-    st.title("5 - Simple Plot")
+    st.title("5 - Simple Scatter Plot")
     st.write("Create a plot with the desired combination of the variables.")
     st.info(
     """
@@ -1364,7 +1366,7 @@ elif page == "Team Comparison Tool":
 elif page == "Player Progression in a Team":
     st.write("""---""")
     st.title("10 - Player Progression in a Team")
-    st.write("Review and analyze a player’s trajectory in the same team from the 2024/25 season to the 2025/26 season.")
+    st.write("Review and analyze a player’s trajectory in the same team.")
     st.info(
     """
     Liga Portugal  -  Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
@@ -1372,12 +1374,26 @@ elif page == "Player Progression in a Team":
 
     st.subheader("🛠️ Player Settings")
 
-    #leagues_2526 = df[df['Season'] == '2025/26']['League'].unique()
-    leagues = df['League'].unique().tolist()
-    league_filter = st.selectbox("Filter by a League that the Team has played in 2024/25 or 2025/26:", 
-                                options=leagues)
+    df1 = df.sort_values(['Player','Team','Season'])
+    
+    df1['age_jump_backw'] = (df1.groupby('Player')['Age'].shift(1))-(df1['Age'])
+    df1['age_jump_foward'] = (df1.groupby('Player')['Age'].shift(-1))-(df1['Age'])
+    df1['age_jump_backw_good'] = (df1['age_jump_backw'].isin([1,0,-1]))
+    df1['age_jump_foward_good'] = (df1['age_jump_foward'].isin([-1,0, 1]))
+    df1['filter'] = (df1['age_jump_backw_good'] == True) | (df1['age_jump_foward_good'] == True)
 
-    df_LF = df[(df['League'] == league_filter)]
+    df_clean = df1[df1['filter'] != False].copy()
+    df_clean = df_clean.drop(columns=['age_jump_backw','age_jump_foward','age_jump_backw_good','age_jump_foward_good','filter']) 
+    df_clean = df_clean.reset_index(drop=True)
+    
+    league_order = ['Liga Portugal', 'Liga 2', 'Liga 3', 'Campeonato de Portugal', 'Liga Revelação U23']
+
+    df_clean['League'] = pd.Categorical(df_clean['League'], categories=league_order, ordered=True)
+
+    league_filter = st.selectbox("Filter by a League that the Team played in:",
+                                df_clean['League'].unique().sort_values())
+
+    df_LF = df_clean[df_clean['League'] == league_filter]
 
     teams = df_LF['Team'].unique().tolist()
     sorted_teams = sorted(teams)
@@ -1385,9 +1401,9 @@ elif page == "Player Progression in a Team":
     Team_filter = st.selectbox("Team:", 
                                 options=sorted_teams)
 
-    df_TF = df[df['Team']== Team_filter]
+    df_TF = df_clean[df_clean['Team']== Team_filter]
     
-    df_TF = df_TF.groupby(['Player', 'Team']).filter(lambda x: len(x) == 2) #filter to have only player names with 2 rows for a Team#
+    df_TF = df_TF.groupby(['Player', 'Team']).filter(lambda x: len(x) > 1) #filter to have only player names with 2 rows for a Team
     players = df_TF['Player'].unique().tolist()
     sorted_players = sorted(players)
     
@@ -1398,28 +1414,28 @@ elif page == "Player Progression in a Team":
 
     filtered_df = df_PF.sort_values(by='Season', ascending=True)
 
-    styled_df = filtered_df.style.map(style_grade_column, subset=['Grade'])\
+    styled_df = df_PF.style.map(style_grade_column, subset=['Grade'])\
                    .format(precision=2, subset=['Goal-Scoring', 'Attack','Possession', 'Defense','Physical','Goalkeeping'])
 
     st.dataframe(styled_df,
                  column_order=("Season","League","Player","Team","Age","Position","Goal-Scoring","Attack","Possession","Defense","Physical","Goalkeeping","PosRank","Grade"),
                  width="stretch",
                  hide_index=True,
-                 height = 107)
+                 height = 143)
     
     st.write("""---""")
 
     plot_df = df_PF[df_PF['Player'] == Player_filter].sort_values('Season')
-    target_seasons = ['2024/25', '2025/26']
+    target_seasons = ['2023/24', '2024/25', '2025/26']
     plot_df = plot_df[plot_df['Season'].isin(target_seasons)]
     plot_df = plot_df.drop_duplicates(subset=['Season'], keep='last').sort_values('Season')
-    
-    if len(plot_df) != 2:
-        missing = set(target_seasons) - set(plot_df['Season'])
+
+    if len(plot_df) < 2:
         st.warning(f"⚠️ Comparison impossible. Missing data for it.")
         st.stop()
 
     season_labels = plot_df['Season'].tolist()
+    num_seasons = len(plot_df)
     current_position = plot_df.iloc[-1]['Position'].lower()
 
     if 'GK' in current_position or 'gk' in current_position:
@@ -1429,79 +1445,74 @@ elif page == "Player Progression in a Team":
         metrics = ['Goal-Scoring', 'Attack', 'Possession', 'Defense', 'Physical']
         colors = ['#E63946', '#1A73E8', '#2A9D8F', '#F4A261', '#8D99AE']
 
-    season_labels = plot_df['Season'].tolist() 
-    season_colors = ["#D80000", "#1500D3"]
+    season_colors = ["#5da5da", "#faa43a", "#60bd68"]
 
-    fig = plt.figure(figsize=(20, 12), facecolor='#F8F9FA')
+    fig = plt.figure(figsize=(20, 14), facecolor='#F8F9FA')
     gs = gridspec.GridSpec(2, 2, width_ratios=[1.2, 2.8], height_ratios=[1, 1], hspace=0.3, wspace=0.2)
 
     ax_info = fig.add_subplot(gs[:, 0])
     ax_info.axis('off')
-    ax_info.text(0.05, 0.9575, Player_filter.upper(), fontsize=28, fontweight='bold', color="#000000")
-    ax_info.text(0.05, 0.9545, f"{plot_df.iloc[-1]['Team']} | {plot_df.iloc[-1]['Age']}y", fontsize=14, fontweight='bold', color='#6C757D')
-    ax_info.plot([0.05, 0.90], [0.90, 0.90], color="#F8F9FA", lw=0) #separator on middle left that reset the axis info
+    ax_info.text(0.05, 1.05, Player_filter.upper(), fontsize=28, fontweight='bold')
+    ax_info.text(0.05, 1.025, f"{plot_df.iloc[-1]['Team']} | {plot_df.iloc[-1]['Age']}y", fontsize=14, color='#6C757D', fontweight='bold')
+    y_offset = 0.95
 
-    details = [
-        (f"  ▼ Season 2025/26 ▼", " "),
-        ("League:", plot_df.iloc[-1]['League']),
-        ("Position:", plot_df.iloc[-1]['Position']),
-        ("Grade:", plot_df.iloc[-1]['Grade']),
-        (" ", " "), 
-        (f"  ▼ Season 2024/25 ▼", " "),
-        ("League:", plot_df.iloc[0]['League']),
-        ("Position:", plot_df.iloc[0]['Position']),
-        ("Grade:", plot_df.iloc[0]['Grade'])
-    ]
+    for _, row in plot_df.iloc[::-1].iterrows():
+        ax_info.text(0.05, y_offset, f"▼ Season {row['Season']} ▼", fontsize=13, color='#6C757D', fontweight='bold')
+        ax_info.text(0.05, y_offset-0.03, f"League: {row['League']}", fontsize=12)
+        ax_info.text(0.05, y_offset-0.0525, f"Position: {row['Position']}", fontsize=12)
+        ax_info.text(0.05, y_offset-0.075, f"Grade: {row['Grade']}", fontsize=12, fontweight='bold')
+        y_offset -= 0.13
 
-    for i, (label, value) in enumerate(details):
-        y_pos = 0.946 - (i * 0.005)
-        ax_info.text(0.05, y_pos, label, fontsize=12, color='#6C757D', fontweight='bold')
-        ax_info.text(0.45, y_pos, value, fontsize=12, color='#212529', fontweight='bold')
+    ax_info.text(0.05, 0.455, "DEVELOPMENT SUMMARY", fontsize=14, fontweight='bold')
 
-    ax_info.text(0.05, 0.89595, "DEVELOPMENT SUMMARY", fontsize=14, fontweight='bold', color="#000000")
     for i, m in enumerate(metrics):
-        diff = plot_df.iloc[1][m] - plot_df.iloc[0][m]
+        diff = plot_df.iloc[-1][m] - plot_df.iloc[0][m]
         color = '#2A9D8F' if diff >= 0 else '#E63946'
         symbol = "▲" if diff >= 0 else "▼"
-        y_pos = 0.885 - (i * 0.0075)
-        ax_info.text(0.05, y_pos, m, fontsize=12, color='#6C757D', fontweight='bold')
-        ax_info.text(0.45, y_pos, f"{symbol} {abs(diff):.1f}", fontsize=12, fontweight='bold', color=color)
+        y_pos = (0.35) - (i * 0.07)
+        ax_info.text(0.05, y_pos, m, fontsize=13, color='#6C757D', fontweight='bold')
+        ax_info.text(0.55, y_pos, f"{symbol} {abs(diff):.1f}", fontsize=12, fontweight='bold', color=color)
 
     ax_bar = fig.add_subplot(gs[0, 1])
     y = np.arange(len(metrics))
-    width = 0.35
+    width = 0.25 
 
-    ax_bar.barh(y - width/2, plot_df.iloc[1][metrics], width, label=season_labels[1], color=season_colors[1])
-    ax_bar.barh(y + width/2, plot_df.iloc[0][metrics], width, label=season_labels[0], color=season_colors[0], alpha=0.7)
+    for i in range(num_seasons):
+        offset = (width * (num_seasons - 1) / 2) - (i * width)
+        ax_bar.barh(y + offset, plot_df.iloc[i][metrics], width, 
+                    label=season_labels[i], color=season_colors[i], alpha=0.8 if i < num_seasons-1 else 1.0)
+
     ax_bar.set_yticks(y)
     ax_bar.invert_yaxis()
     ax_bar.set_yticklabels(metrics, fontweight='bold')
     ax_bar.set_xlim(0, 115)
-    ax_bar.set_title(f"STATISTICAL GROWTH: {season_labels[0]} → {season_labels[1]}", loc='left', fontsize=14, fontweight='bold', color="#000000", pad=15)
-    ax_bar.legend(loc='lower right', frameon=False, fontsize=10)
+    ax_bar.set_title("STATISTICAL COMPARISON", loc='left', fontsize=14, fontweight='bold', pad=15)
+    ax_bar.legend(loc='lower right', frameon=False)
     ax_bar.spines['top'].set_visible(False)
     ax_bar.spines['right'].set_visible(False)
 
+    handles, labels = ax_bar.get_legend_handles_labels()
+    ax_bar.legend(handles[::-1], labels[::-1], loc='lower right', frameon=False, fontsize=10)
+
     ax_line = fig.add_subplot(gs[1, 1])
-    x_indices = [0, 1] 
+    x_indices = np.arange(num_seasons)
 
     for i, metric in enumerate(metrics):
         y_vals = plot_df[metric].tolist()
         
-        ax_line.plot(x_indices, y_vals, color=colors[i], linewidth=5 if len(metrics) == 1 else 4, alpha=0.8, zorder=1)
-        ax_line.scatter(x_indices, y_vals, s=150 if len(metrics) == 1 else 120, color=colors[i], edgecolors='white', linewidth=2, zorder=2)
-        ax_line.text(x_indices[-1] + 0.02, y_vals[-1], metric, color=colors[i], 
-                    fontweight='bold', va='center', fontsize=11 if len(metrics) == 1 else 10)
+        ax_line.plot(x_indices, y_vals, color=colors[i], linewidth=4, alpha=0.8, zorder=1)
+        ax_line.scatter(x_indices, y_vals, s=120, color=colors[i], edgecolors='white', linewidth=2, zorder=2)
+        ax_line.text(x_indices[-1] + 0.05, y_vals[-1], metric, color=colors[i], 
+                    fontweight='bold', va='center', fontsize=10)
 
     ax_line.set_xticks(x_indices)
     ax_line.set_xticklabels(season_labels, fontweight='bold', fontsize=12)
-    ax_line.set_xlim(-0.2, 1.4)
+    ax_line.set_xlim(-0.3, num_seasons - 0.5)
     ax_line.set_ylim(0, 105)
     ax_line.set_title("PERFORMANCE TRENDLINE", loc='left', fontsize=14, fontweight='bold', pad=15)
     ax_line.spines['top'].set_visible(False)
     ax_line.spines['right'].set_visible(False)
     ax_line.grid(True, axis='y', linestyle=':', alpha=0.3)
-
     plt.figtext(0.9, 0.02, "@TheStatsWay", ha="right", fontsize=12, color='black', fontweight='bold')
     plt.tight_layout()
     st.pyplot(fig)
@@ -1513,3 +1524,101 @@ elif page == "Player Progression in a Team":
             data=buf.getvalue(),
             file_name=f"Player_Progression_{Player_filter}_Analysis.png",
             mime="image/png")
+    
+elif page == "Player Search Hub":
+    st.write("""---""")
+    st.title("11 - Player Search Hub ")
+    st.write("Find players that match your performance requirements.")
+    st.info(
+    """
+    Liga Portugal  -  Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
+    """, icon="ℹ️")
+    
+    df = df[df.Position != "GK"]
+
+    st.subheader("🛠️ Search Settings")
+
+    selected_season = st.multiselect("Targeted Season(s):",
+                                options=sorted(df['Season'].unique()),
+                                default='2025/26')
+
+    selected_position = st.selectbox("Targeted Position:", 
+                                  df['Position'].unique())
+    
+    col1, col2 = st.columns(2)
+    min_age = int(df['Age'].min())
+    max_age = int(df['Age'].max())
+
+    with col1:       
+        age_min = st.number_input("Minimum Player Age:", 
+                                min_value=min_age,
+                                max_value=max_age,
+                                value=19)
+        age_min = int(age_min)
+                      
+    with col2:
+        age_max = st.number_input("Maximum Player Age:", 
+                                min_value=min_age,
+                                max_value=max_age,
+                                value=37)
+        age_max = int(age_max)
+           
+    st.divider()
+    st.subheader("Required Thresholds")
+
+    goal_min = st.slider("Minimum Goal-Scoring", 0, 100, 0)
+    attack_min = st.slider("Minimum Attack", 0, 100, 0)
+    poss_min = st.slider("Minimum Possession", 0, 100, 0)
+    def_min = st.slider("Minimum Defense", 0, 100, 0)
+    phys_min = st.slider("Minimum Physical", 0, 100, 0)
+
+    filtered_df = df[
+        (df['Season'].isin(selected_season)) &
+        (df['Position'] == selected_position) &
+        (df['Age'] >= age_min) &
+        (df['Age'] <= age_max) &
+        (df['Goal-Scoring'] >= goal_min) &
+        (df['Attack'] >= attack_min) &
+        (df['Possession'] >= poss_min) &
+        (df['Defense'] >= def_min) &
+        (df['Physical'] >= phys_min)
+    ]
+  
+    st.divider()
+    st.title("🔍 Player Search Hub")
+    st.markdown(f"Finding players that match your requirements.")
+
+    col1, col2, col3, col4, col5, col6, col7, col8  = st.columns(8)
+    col1.metric("Results Found", len(filtered_df))
+    col2.metric("Avg. Age", f"{round(filtered_df['Age'].mean(), 1) if not filtered_df.empty else '0'}")
+    col3.metric("Most Common Grade", f"{filtered_df['Grade'].mode()[0] if not filtered_df.empty else 'N/A'}")
+    col4.metric("Avg. Goal-Scoring", f"{round(filtered_df['Goal-Scoring'].mean(), 1) if not filtered_df.empty else '0'}")
+    col5.metric("Avg. Attack", f"{round(filtered_df['Attack'].mean(), 1) if not filtered_df.empty else '0'}")
+    col6.metric("Avg. Possession", f"{round(filtered_df['Possession'].mean(), 1) if not filtered_df.empty else '0'}")
+    col7.metric("Avg. Defense", f"{round(filtered_df['Defense'].mean(), 1) if not filtered_df.empty else '0'}")
+    col8.metric("Avg. Physical", f"{round(filtered_df['Physical'].mean(), 1) if not filtered_df.empty else '0'}")
+
+    filtered_df['Skill Score'] = filtered_df[['Goal-Scoring', 'Attack', 'Possession', 'Defense', 'Physical']].mean(axis=1)
+
+    if not filtered_df.empty:
+        display_cols = ['Season','League','Player', 'Team', 'Age', 'Position', 'Goal-Scoring', 'Attack', 'Possession', 'Defense', 'Physical','Grade', 'Skill Score']
+        
+        st.dataframe(
+            filtered_df[display_cols].sort_values('Skill Score', ascending=False),
+            width='stretch',
+            height = 770,
+            hide_index=True,
+            column_config={
+                "Skill Score": st.column_config.ProgressColumn(
+                    "Metric Average",
+                    help="Average of the 5 core scouting metrics",
+                    format="%.1f",
+                    min_value=0,
+                    max_value=100,
+                ),
+            }
+        )
+    else:
+        st.info("No players found matching these exact criteria. Try lowering the thresholds!")
+
+        
