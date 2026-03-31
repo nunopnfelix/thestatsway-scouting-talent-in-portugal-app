@@ -15,6 +15,7 @@ This repository provides some tools designed for analysing and comparing footbal
    <br>
  # 🔎 Competitions:
 
+ • Liga Portugal <br><br>
  • Liga Portugal 2 <br><br>
  • Liga 3 <br><br>
  • Campeonato de Portugal  <br><br>
