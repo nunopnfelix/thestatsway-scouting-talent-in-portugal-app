@@ -162,11 +162,16 @@ elif page == "Player Stats - Player Overview":
     min_age = int(df_PF['Age'].min())
     max_age = int(df_PF['Age'].max())
     
-    age_range = st.slider("Age Range:",
-                        min_value=min_age,
-                        max_value=max_age,
-                        value=(min_age, max_age))
-
+    if min_age < max_age:
+        age_range = st.slider(
+            "Age Range:",
+            min_value=min_age,
+            max_value=max_age,
+            value=(min_age, max_age)
+    )
+    else:
+        age_range = (min_age, min_age)
+        
     df_AF = df_PF[(df_PF['Age'] >= age_range[0]) & (df_PF['Age'] <= age_range[1])]
 
     unique_grade = df['Grade'].unique().tolist()
@@ -296,10 +301,15 @@ elif page == "Player Stats - Team Overview":
     min_age = int(df_PF['Age'].min())
     max_age = int(df_PF['Age'].max())
     
-    age_range = st.slider("Age Range:",
-                        min_value=min_age,
-                        max_value=max_age,
-                        value=(min_age, max_age))
+    if min_age < max_age:
+        age_range = st.slider(
+            "Age Range:",
+            min_value=min_age,
+            max_value=max_age,
+            value=(min_age, max_age)
+        )
+    else:
+        age_range = (min_age, min_age)
 
     df_AF = df_PF[(df_PF['Age'] >= age_range[0]) & (df_PF['Age'] <= age_range[1])]
 
@@ -820,10 +830,15 @@ elif page == "Scatter Plot":
     min_age = int(df_PF['Age'].min())
     max_age = int(df_PF['Age'].max())
     
-    age_range = st.slider("Age Range:",
-                        min_value=min_age,
-                        max_value=max_age,
-                        value=(min_age, max_age))
+    if min_age < max_age:
+        age_range = st.slider(
+            "Age Range:",
+            min_value=min_age,
+            max_value=max_age,
+            value=(min_age, max_age)
+        )
+    else:
+        age_range = (min_age, min_age)
 
     df_AF = df_PF[(df_PF['Age'] >= age_range[0]) & (df_PF['Age'] <= age_range[1])]
 
