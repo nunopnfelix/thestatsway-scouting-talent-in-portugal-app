@@ -1697,7 +1697,7 @@ elif page == "Team Recruitment Tool":
     existing_order = [p for p in pos_order if p in team_avg.index]
 
     team_avg = team_avg.reindex(existing_order)
-    st.subheader(f"📊 {Team_filter} - Positional DNA")
+    st.subheader(f"📊 {Team_filter} - Positional Review")
     
     def highlight_low_scores(val):
         if val == 0:
