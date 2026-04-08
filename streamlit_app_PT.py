@@ -37,7 +37,7 @@ with st.sidebar:
 
     page = st.sidebar.radio("Pages:", ["Instructions & Abbreviations","Player Stats - Player Overview","Player Stats - Team Overview","Player Comparison Tool",
                                        "Lineup Builder","Scatter Plot","Interactive Plot","Player Report Card","Player Similarity Tool","Team Comparison Tool","Player Progression in a Team",
-                                       "Player Search Hub"],
+                                       "Player Search Hub","Team Recruitment Identifier"],
                                     label_visibility="collapsed")
 
 
@@ -72,7 +72,7 @@ def style_grade_column(val):
 grade_order = ['S', 'A', 'B', 'C', 'D', 'E', 'F']
 
 st.sidebar.divider()
-st.sidebar.write("𝐯𝟏.𝟎.𝟎𝟖")
+st.sidebar.write("𝐯𝟏.𝟎.𝟎𝟗")
 st.sidebar.write("Data Last Updated: Mar 12, 2026")
 
 if page == "Instructions & Abbreviations":
@@ -244,8 +244,11 @@ elif page == "Player Stats - Player Overview":
                        cell.set_facecolor(bg_color)
                        cell.set_text_props(weight='bold', color='black')
 
-            plt.title(f" {Season_filter} - {League_filter} : {report_title}", 
+            plt.title(f"{League_filter} : {report_title}", 
                     color="#000000", fontsize=18, fontweight='bold', pad=30)
+            
+            plt.figtext(0.5, 0.90, f"Season: {Season_filter} + Age > {age_range[0]} + Age < {age_range[1]}", 
+                        fontsize=12, color="#000000", ha='center', style='italic')
 
             plt.figtext(0.9, 0.05, "@TheStatsWay", 
                         horizontalalignment='right', size=12, color="#000000", style='italic', fontweight='bold')
@@ -374,9 +377,12 @@ elif page == "Player Stats - Team Overview":
                         cell.set_facecolor(bg_color)
                         cell.set_text_props(weight='bold', color='black')
 
-            plt.title(f"{Season_filter} - {League_filter}: {Team_filter}", 
+            plt.title(f"{League_filter}: {Team_filter}", 
                     color="#000000", fontsize=22, fontweight='bold', pad=20)
 
+            plt.figtext(0.5, 0.94, f"Season: {Season_filter} + Age > {age_range[0]} + Age < {age_range[1]}", 
+                        fontsize=12, color="#000000", ha='center', style='italic')
+            
             plt.figtext(0.9, 0.02, "@TheStatsWay", 
                         horizontalalignment='right', size=12, color="#000000", style='italic', fontweight='bold')
 
@@ -588,10 +594,10 @@ elif page == "Player Comparison Tool":
                         cell.set_facecolor(bg_color)
                         cell.set_text_props(weight='bold', color='black')
 
-            fig.suptitle(f"{p1} & {p2} Comparison", 
+            fig.suptitle(f"Player Comparison Report", 
                     color="#000000", fontsize=22, fontweight='bold', y=0.98)
             
-            plt.figtext(0.5, 0.93, f"Season: {Season_filter} + League: {League_filter}", 
+            plt.figtext(0.5, 0.93, f"{p1} & {p2} (Season: {Season_filter} + League: {League_filter})", 
                         fontsize=12, color="#000000", ha='center', style='italic')
             
             plt.figtext(0.9, 0.05, "@TheStatsWay", 
@@ -710,8 +716,6 @@ elif page == "Lineup Builder":
     selected_formation = st.selectbox("Choose Formation", 
                                         options=list(formations.keys()), 
                                         on_change=reset_lineup)
-
-        #st.title(f"Formation Selected: {selected_formation}")
         
     plot_data = {}
 
@@ -786,7 +790,7 @@ elif page == "Lineup Builder":
             color='Black', fontsize=7, fontweight='bold',
             ha='right', va='bottom', alpha=0.7)
 
-            st.pyplot(fig)
+    st.pyplot(fig)
 
     buf = io.BytesIO()
     fig.savefig(buf, format="png", dpi=300, bbox_inches="tight")
@@ -849,7 +853,7 @@ elif page == "Scatter Plot":
                                 default=sorted_teams)
 
     if TeamFilter:
-        df5_TF = df_AF[df_AF["Team"].isin(TeamFilter)]
+        df_TF = df_AF[df_AF["Team"].isin(TeamFilter)]
 
     st.subheader("📊 Plot Settings")
     st.info(
@@ -858,7 +862,7 @@ elif page == "Scatter Plot":
     Elite - S (Dark Green) to Very Poor - F (Red)
     """, icon="ℹ️")
     allowed_metrics = ["Goal-Scoring","Attack", "Possession", "Defense","Physical","Age"]
-    variables = [m for m in allowed_metrics if m in df5_TF.columns]
+    variables = [m for m in allowed_metrics if m in df_TF.columns]
     
     x_axis = st.selectbox("X-Axis (Horizontal)", 
                         variables, 
@@ -872,7 +876,7 @@ elif page == "Scatter Plot":
     fig.set_facecolor("#333333")
     ax.set_facecolor("#f7f7f7")
 
-    for i, row in df5_TF.iterrows():
+    for i, row in df_TF.iterrows():
         ax.scatter(row[x_axis], row[y_axis], 
                 color= get_grade_color(row['Grade']), 
                 s=200, 
@@ -884,13 +888,16 @@ elif page == "Scatter Plot":
                 color='black', 
                 ha='center', fontsize=7)
 
-    ax.set_title(f"{Position_filter}s in {League_filter}: {x_axis} & {y_axis} Analysis", color='white', fontsize=18, fontweight='bold', pad=15)
+    ax.set_title(f"{Position_filter}s Report: {x_axis} & {y_axis}", color='white', fontsize=18, fontweight='bold', pad=30)
     ax.set_xlabel(x_axis, color='white', fontsize=12,fontweight='bold')
     ax.set_ylabel(y_axis, color='white', fontsize=12,fontweight='bold')
     ax.tick_params(colors='white')
     ax.grid(color='#333333', linestyle='--', alpha=0.5)
 
-    plt.figtext(0.9, 0.02, "@TheStatsWay", ha="right", fontsize=10, color='White', fontweight='bold')
+    plt.figtext(0.5, 0.915, f"Season: {Season_filter} + League: {League_filter} + Age > {age_range[0]} + Age < {age_range[1]}", 
+                fontsize=11, color="#FFFFFF", ha='center', style='italic')
+    plt.figtext(0.9, 0.02, "@TheStatsWay", ha="right", 
+                fontsize=10, color='White', fontweight='bold')
     plt.figtext(0.35, 0.01, "https://thestatsway-scouting-talent-in-portugal-app.streamlit.app/",ha="right", fontsize=6, color='White', fontweight='bold')
     
     st.pyplot(fig)
@@ -1273,6 +1280,9 @@ elif page == "Player Similarity Tool":
                 plt.title(f"Most Similar Data Profile to {selected_player} ({Season_filter})", 
                       color="#000000", fontsize=16, fontweight='bold', pad=30, y=0.92)
             
+                plt.figtext(0.5, 0.915, f"Age > {age_range[0]} + Age < {age_range[1]}", 
+                            fontsize=11, color="#000000", ha='center', style='italic')
+
                 plt.figtext(0.9, 0.05, "@TheStatsWay", 
                             horizontalalignment='right', size=12, color="#000000", style='italic', fontweight='bold')
 
@@ -1557,6 +1567,10 @@ elif page == "Player Search Hub":
                                 options=sorted(df['Season'].unique()),
                                 default='2025/26')
 
+    selected_leagues = st.multiselect("Targeted Leagues:",
+                                options=sorted(df['League'].unique()),
+                                default="Liga 3")
+
     selected_position = st.selectbox("Targeted Position:", 
                                   df['Position'].unique())
     
@@ -1589,6 +1603,7 @@ elif page == "Player Search Hub":
 
     filtered_df = df[
         (df['Season'].isin(selected_season)) &
+        (df['League'].isin(selected_leagues)) &
         (df['Position'] == selected_position) &
         (df['Age'] >= age_min) &
         (df['Age'] <= age_max) &
@@ -1636,4 +1651,272 @@ elif page == "Player Search Hub":
     else:
         st.info("No players found matching these exact criteria. Try lowering the thresholds!")
 
+elif page == "Team Recruitment Identifier":
+    st.write("""---""")
+    st.title("12 - Team Recruitment Identifier Hub ")
+    st.write("Find players that fit the teams needs.")
+    st.info(
+    """
+    Liga Portugal  -  Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
+    """, icon="ℹ️")
+
+    st.subheader("🛠️ Team Search Settings")
+
+    season_filter = st.selectbox("Filter by the Season that the Team played in:",
+                                df['Season'].unique())
+
+    df = df[df['Season'] == season_filter]
+    df_clean = df[df['Season'] == season_filter] 
+
+    league_filter = st.selectbox("Filter by a League that the Team played in:",
+                                df['League'].unique())
+
+    df_LF = df[df['League'] == league_filter]
+
+    metrics = ['Goal-Scoring', 'Attack', 'Possession', 'Defense', 'Physical','Goalkeeping']
+
+    teams = df_LF['Team'].unique().tolist()
+    sorted_teams = sorted(teams)
+
+    Team_filter = st.selectbox("Team:", 
+                                options=sorted_teams)
+
+    team_data = df_LF[df_LF['Team'] == Team_filter]
+
+    team_avg = team_data.groupby('Position')[metrics].mean().round(1)
+
+    position_context = team_data.groupby('Position').agg(AvgAge=('Age', 'mean'),
+                                                         NumberPlayers=('Player', 'count'))
+    
+    position_context['AvgAge'] = position_context['AvgAge'].round(1)
+    position_context['NumberPlayers'] = position_context['NumberPlayers'].astype(int)
+    team_avg = pd.concat([position_context, team_avg], axis=1)
+
+    pos_order = ['GK', 'CB', 'FB & WB', 'MF', 'AM & W', 'CF']
+    existing_order = [p for p in pos_order if p in team_avg.index]
+
+    team_avg = team_avg.reindex(existing_order)
+    st.subheader(f"📊 {Team_filter} - Positional DNA")
+    
+    def highlight_low_scores(val):
+        if val == 0:
+            return 'background-color: grey; color: white; font-weight: bold;'
+        if val < 50:
+            return 'background-color: #ff4b4b; color: white; font-weight: bold;'
+        return ''
+    
+    styled_team_avg = (
+            team_avg.style
+            .map(highlight_low_scores, subset=metrics)
+            .format(lambda x: "NA" if x == 0 else f"{x:.2f}")
+        )
+    
+    st.dataframe(styled_team_avg, 
+                 width='stretch')
+
+    threshold = 50.0
+    weaknesses = []
+
+    for pos in team_avg.index:
+        for metric in metrics:
+            score = team_avg.loc[pos, metric]
+            if score < threshold:
+                weaknesses.append({'Position': pos, 'Metric': metric, 'Score': score})
+
+    weak_df = pd.DataFrame(weaknesses)
+
+    if not weak_df.empty:
+        weak_df = weak_df[weak_df['Score'] > 0]
+
+    if not weak_df.empty:
+       
+        st.warning(f"⚠️ Found {len(weak_df)} actionable areas performing below the {threshold} threshold.")
+        position_needs = weak_df.groupby('Position')['Metric'].apply(list).to_dict()
         
+    else:
+        st.success("✅ No actionable weaknesses found (all missing data marked as NA).")
+
+    st.divider()
+    st.header("🎯 Required Positional Profiles")
+    st.info("The following players are ranked by their ability to solve all identified weaknesses for each position simultaneously.")
+
+    Leagues = df_clean['League'].unique().tolist()
+    LeaguesReplacementFilter = st.multiselect("League Filter:",
+                                options=Leagues,
+                                default=league_filter)
+
+    if LeaguesReplacementFilter:
+        df_clean = df_clean[df_clean["League"].isin(LeaguesReplacementFilter)]
+
+    min_age = int(df_clean['Age'].min())
+    max_age = int(df_clean['Age'].max())
+    
+    if min_age < max_age:
+        age_range = st.slider(
+            "Age Range:",
+            min_value=min_age,
+            max_value=max_age,
+            value=(min_age, max_age)
+    )
+    else:
+        age_range = (min_age, min_age)
+
+    df_clean = df_clean[(df_clean['Age'] >= age_range[0]) & (df_clean['Age'] <= age_range[1])]
+
+    st.divider()
+    st.header("💎 Analysing: Player Needs")
+    st.info("These potential targets are aimed to solve the identified weaknesses for each position.")
+
+    if not weak_df.empty:
+
+        real_weaknesses = weak_df[weak_df['Score'] > 0]
+
+        if not real_weaknesses.empty:
+
+            position_needs = real_weaknesses.groupby('Position')['Metric'].apply(list).to_dict()
+            pos_order = ['GK', 'CB', 'FB & WB', 'MF', 'AM & W', 'CF']
+            
+            for pos in pos_order:
+                if pos in position_needs:
+                    needs = position_needs[pos]
+                    
+                    with st.expander(f"**PLAYER NEEDS - SIGNINGS PROFILE: {pos}** (Needs: {', '.join(needs)})"):
+
+                        query_condition = (df_clean['Position'] == pos) & (df_clean['Team'] != Team_filter)
+                        
+                        for m in needs:
+                            
+                            team_score = real_weaknesses[(real_weaknesses['Position'] == pos) & 
+                                                         (real_weaknesses['Metric'] == m)]['Score'].values[0]
+                            
+                            query_condition &= (df_clean[m] > 49.999) #higher than teams value and 50 threshold
+
+                        potential_signings = df_clean[query_condition].copy()
+
+                        if not potential_signings.empty:
+                            potential_signings['Solution Score'] = potential_signings[needs].mean(axis=1)
+
+                            recommendations = potential_signings.sort_values(by='Solution Score', ascending=False).head(10)
+
+                            st.write(f"Showing the best players to improve **{', '.join(needs)}** for the {pos} position:")
+                            
+                            display_cols = ['Player', 'Team', 'Age'] + needs + ['Grade', 'Solution Score']
+                            
+                            styled_recommendations = (recommendations[display_cols].style
+                                .format(lambda x: "NA" if x == 0 else (f"{x:.2f}" if isinstance(x, (int, float)) else x)))
+
+                            st.dataframe(
+                                styled_recommendations,
+                                hide_index=True,
+                                width='stretch',
+                                column_config={
+                                    "Solution Score": st.column_config.ProgressColumn(
+                                        "Fit Score", 
+                                        min_value=0, max_value=100, format="%.2f"),
+                                }
+                            )
+                        else:
+                            st.info(f"No players found in the database who perform better than the current {pos} average in {', '.join(needs)}.")
+        else:
+            st.success("✅ No actionable weaknesses found (all missing data marked as NA).")
+    else:
+        st.success("✅ Your squad is balanced! No positions are currently below the threshold.")
+
+
+    st.divider()
+    st.header("💎 Analysing: Star Upgrades")
+    st.info("These potential targets outperform the current squad average in every single performance category for their position.")
+
+    outfield_metrics = ['Goal-Scoring', 'Attack', 'Possession', 'Defense', 'Physical']
+    gk_metrics = ['Goalkeeping']
+
+    for pos in pos_order:
+
+        if pos in team_avg.index:
+            
+            compare_metrics = gk_metrics if pos == 'GK' else outfield_metrics
+            team_baseline = team_avg.loc[pos, compare_metrics]
+
+            potential_upgrades = df_clean[
+                (df_clean['Position'] == pos) & 
+                (df_clean['Team'] != Team_filter)
+            ].copy()
+
+            if not potential_upgrades.empty:
+
+                upgrade_mask = (potential_upgrades[compare_metrics] > team_baseline).all(axis=1)
+                elite_targets = potential_upgrades[upgrade_mask].copy()
+
+                if not elite_targets.empty:
+                    with st.expander(f"**STAR UPGRADES: {pos}** ({len(elite_targets)} targets found)"):
+                        
+                        elite_targets['Value Added'] = (elite_targets[compare_metrics].mean(axis=1) - team_baseline.mean())
+                        elite_targets = elite_targets.sort_values(by='Value Added', ascending=False).head(10)
+
+                        st.write(f"These players are statistically superior to your **{pos}** baseline in all {len(compare_metrics)} categories:")
+
+                        display_cols = ['Player', 'Team', 'Age'] + compare_metrics + ['Value Added']
+                        
+                        st.dataframe(
+                            elite_targets[display_cols].style.format(precision=2),
+                            hide_index=True,
+                            width='stretch',
+                            column_config={
+                                "Value Added": st.column_config.NumberColumn(
+                                    "Avg. Lift",
+                                    help="Average performance increase across all metrics compared to your squad",
+                                    format="+%.2f"
+                                ),
+                                **{m: st.column_config.NumberColumn(m, format="%.1f") for m in (outfield_metrics + gk_metrics)}
+                            }
+                        )
+
+    st.divider()
+    st.header("💎 Analysing: Positional Upgrades")
+    st.info("These potential targets have a higher average performance than the current squads baseline for their position.")
+   
+    team_mean_benchmarks = team_data.groupby('Position')[outfield_metrics + gk_metrics].mean()
+
+    for pos in pos_order:
+        if pos in team_mean_benchmarks.index:
+            
+            compare_metrics = gk_metrics if pos == 'GK' else outfield_metrics
+
+            team_baseline_avg = team_mean_benchmarks.loc[pos, compare_metrics].mean()
+
+            potential_upgrades = df_clean[
+                (df_clean['Position'] == pos) & 
+                (df_clean['Team'] != Team_filter)
+            ].copy()
+
+            if not potential_upgrades.empty:
+
+                potential_upgrades['Avg Value Added'] = (potential_upgrades[compare_metrics].mean(axis=1) - team_baseline_avg)
+                
+                upgrade_targets = potential_upgrades[potential_upgrades['Avg Value Added'] > 0].copy()
+                
+                if not upgrade_targets.empty:
+
+                    upgrade_targets = upgrade_targets.sort_values(by='Avg Value Added', ascending=False).head(10)
+
+                    with st.expander(f"**POSITIONAL UPGRADES: {pos}** ({len(potential_upgrades)} targets found)"):
+                        
+                        st.write(f"Showing players who are, on average, better than your current {pos} group:")
+                        
+                        display_cols = ['Player', 'Team', 'Age'] + compare_metrics + ['Avg Value Added']
+                        
+                        st.dataframe(
+                            upgrade_targets[display_cols].style.format(precision=2),
+                            hide_index=True,
+                            width='stretch',
+                            column_config={
+                                "Avg Value Added": st.column_config.NumberColumn(
+                                    "Avg. Lift",
+                                    help="The average points this player adds per metric compared to the team average.",
+                                    format="+%.2f" 
+                                ),
+                                **{m: st.column_config.NumberColumn(m, format="%.1f") for m in (outfield_metrics + gk_metrics)}
+                            }
+                        )
+                else:
+                    st.info(f"No targets found who are, on average, better than the current {pos} squad.")
