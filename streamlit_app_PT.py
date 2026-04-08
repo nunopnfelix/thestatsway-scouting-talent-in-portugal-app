@@ -37,7 +37,7 @@ with st.sidebar:
 
     page = st.sidebar.radio("Pages:", ["Instructions & Abbreviations","Player Stats - Player Overview","Player Stats - Team Overview","Player Comparison Tool",
                                        "Lineup Builder","Scatter Plot","Interactive Plot","Player Report Card","Player Similarity Tool","Team Comparison Tool","Player Progression in a Team",
-                                       "Player Search Hub","Team Recruitment Identifier"],
+                                       "Player Search Hub","Team Recruitment Tool"],
                                     label_visibility="collapsed")
 
 
@@ -91,7 +91,8 @@ if page == "Instructions & Abbreviations":
     - **Player Similarity Tool:** Find the players with the most similar data profile based on our metrics.
     - **Team Comparison Tool:** Create a teams profile per position based on the mean values of the players.
     - **Player Progression in a Team:** Review and analyze a player’s trajectory in the same team.
-    - **Player Search Hub:** Find players that match your performance requirements.""")
+    - **Player Search Hub:** Find players that match your performance requirements.
+    - **Team Recruitment Tool:** Find players that fit the teams needs.""")
     st.write("""---""")
     st.info("Position Abreviations:", icon="ℹ️")
     st.write("""            
@@ -1651,9 +1652,9 @@ elif page == "Player Search Hub":
     else:
         st.info("No players found matching these exact criteria. Try lowering the thresholds!")
 
-elif page == "Team Recruitment Identifier":
+elif page == "Team Recruitment Tool":
     st.write("""---""")
-    st.title("12 - Team Recruitment Identifier Hub ")
+    st.title("12 - Team Recruitment Tool ")
     st.write("Find players that fit the teams needs.")
     st.info(
     """
