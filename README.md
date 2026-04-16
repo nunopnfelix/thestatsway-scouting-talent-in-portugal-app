@@ -13,6 +13,8 @@ This repository provides some tools designed for analysing and comparing footbal
  • 2025/26 <br><br>
  • 2024/25 <br><br>
  • 2023/24 <br><br>
+ • 2022/23 <br><br>
+ • 2021/22 <br><br>
    <br>
  # 🔎 Competitions:
 
@@ -57,7 +59,7 @@ Therefore, we opted for the following intervals to this Grading System: <br><br>
  • F - Very Poor Output in the Competition  <br><br>
 <br>
 
-### Version: 𝐯𝟏.𝟎.𝟎𝟖
+### Version: 𝐯𝟏.𝟎.𝟏𝟎
 ### Data Last Updated: Mar 12, 2026 <br><br>
 
 <br>
@@ -112,3 +114,15 @@ Now you have a tool to search for the most similar profiles to a player based on
 - Player Search Hub: a new page where you can find players that match your performance requirements.
 - Added data regarding Liga Portugal, Liga 2 & Liga 3 from 2023/24.
 - More corrections & improvements.
+
+💻 𝐯𝟏.𝟎.𝟎𝟗
+
+- Team Recruitment Tool: a new page where you can find players that fit the teams needs by analysing their players average performance by position!
+- More corrections & improvements.
+
+💻 𝐯𝟏.𝟎.𝟏𝟎
+
+- Added a new variable: Dribbling.
+- Small adjustment to some metrics & grading system calculation.
+- Adjusted all the Grafs.
+- Added data regarding Liga Portugal, Liga 2 & Liga 3 from 2022/23 & 2021/22.
