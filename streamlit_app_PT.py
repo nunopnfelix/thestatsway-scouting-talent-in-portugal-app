@@ -36,8 +36,8 @@ with st.sidebar:
     st.info("💡 **Page Selection:**")
 
     page = st.sidebar.radio("Pages:", ["Instructions & Abbreviations","Player Stats - Player Overview","Player Stats - Team Overview","Player Comparison Tool",
-                                       "Lineup Builder","Scatter Plot","Interactive Plot","Player Report Card","Player Similarity Tool","Team Comparison Tool","Player Progression in a Team",
-                                       "Player Search Hub","Team Recruitment Tool"],
+                                       "Lineup Builder","Scatter Plot","Interactive Plot","Player Report Card","Player Similarity Tool","Team Comparison Tool",
+                                       "Player Progression in a Team","Player Search Hub","Team Recruitment Identifier"],
                                     label_visibility="collapsed")
 
 
@@ -72,7 +72,7 @@ def style_grade_column(val):
 grade_order = ['S', 'A', 'B', 'C', 'D', 'E', 'F']
 
 st.sidebar.divider()
-st.sidebar.write("𝐯𝟏.𝟎.𝟎𝟗")
+st.sidebar.write("𝐯𝟏.𝟎.𝟏𝟎")
 st.sidebar.write("Data Last Updated: Mar 12, 2026")
 
 if page == "Instructions & Abbreviations":
@@ -91,8 +91,7 @@ if page == "Instructions & Abbreviations":
     - **Player Similarity Tool:** Find the players with the most similar data profile based on our metrics.
     - **Team Comparison Tool:** Create a teams profile per position based on the mean values of the players.
     - **Player Progression in a Team:** Review and analyze a player’s trajectory in the same team.
-    - **Player Search Hub:** Find players that match your performance requirements.
-    - **Team Recruitment Tool:** Find players that fit the teams needs.""")
+    - **Player Search Hub:** Find players that match your performance requirements.""")
     st.write("""---""")
     st.info("Position Abreviations:", icon="ℹ️")
     st.write("""            
@@ -190,7 +189,7 @@ elif page == "Player Stats - Player Overview":
     filtered_df = df_GF.sort_values(by=['Grade','PosRank'],ascending=True).reset_index(drop=True)
 
     styled_df = filtered_df.style.map(style_grade_column, subset=['Grade'])\
-                   .format(precision=2, subset=['Goal-Scoring', 'Attack','Possession', 'Defense','Physical','Goalkeeping'])
+                   .format(precision=2, subset=['Goal-Scoring', 'Attack','Dribbling','Possession','Defense','Physical','Goalkeeping'])
 
     st.dataframe(styled_df, 
                  width="stretch", 
@@ -203,7 +202,7 @@ elif page == "Player Stats - Player Overview":
         report_cols = ['Team','Player Info', 'Goalkeeping','PosRank', 'Grade']
         report_title = "Goalkeeper Scouting Report"
     else:
-        report_cols = ['Team','Player Info', 'Goal-Scoring','Attack','Possession', 'Defense', 'Physical','PosRank', 'Grade']
+        report_cols = ['Team','Player Info', 'Goal-Scoring','Attack','Dribbling','Possession', 'Defense', 'Physical','PosRank', 'Grade']
         report_title = f"{Position_filter.upper()} Scouting Report"
 
     top_10_report = filtered_df.head(10)[report_cols]
@@ -214,7 +213,7 @@ elif page == "Player Stats - Player Overview":
     
         if not top_10_report.empty:
             
-            fig, ax = plt.subplots(figsize=(11, 7), facecolor='#F8F9FA')
+            fig, ax = plt.subplots(figsize=(11.5, 7), facecolor='#F8F9FA')
             ax.axis('off')
 
             table = ax.table(
@@ -321,7 +320,7 @@ elif page == "Player Stats - Team Overview":
     filtered_df = df_AF.sort_values(by=['Grade','PosRank'],ascending=True).reset_index(drop=True)
 
     styled_df = filtered_df.style.map(style_grade_column, subset=['Grade'])\
-                   .format(precision=2, subset=['Goal-Scoring', 'Attack','Possession', 'Defense','Physical','Goalkeeping'])
+                   .format(precision=2, subset=['Goal-Scoring', 'Attack','Dribbling','Possession', 'Defense','Physical','Goalkeeping'])
     
     st.dataframe(styled_df, 
                  width="stretch", 
@@ -329,7 +328,7 @@ elif page == "Player Stats - Team Overview":
                  height = 500)
     
     filtered_df['Player Info'] = filtered_df['Player'] + " (" + filtered_df['Age'].astype(str) + ")"
-    report_cols = ['Player Info','Position', 'Goal-Scoring','Attack','Possession', 'Defense', 'Physical','Goalkeeping','PosRank', 'Grade']
+    report_cols = ['Player Info','Position', 'Goal-Scoring','Attack','Dribbling','Possession', 'Defense', 'Physical','Goalkeeping','PosRank', 'Grade']
 
     top_23_report = filtered_df.head(23)[report_cols]
     st.write("---")
@@ -381,7 +380,7 @@ elif page == "Player Stats - Team Overview":
             plt.title(f"{League_filter}: {Team_filter}", 
                     color="#000000", fontsize=22, fontweight='bold', pad=20)
 
-            plt.figtext(0.5, 0.94, f"Season: {Season_filter} + Age > {age_range[0]} + Age < {age_range[1]}", 
+            plt.figtext(0.5, 0.9325, f"Season: {Season_filter} + Age > {age_range[0]} + Age < {age_range[1]}", 
                         fontsize=12, color="#000000", ha='center', style='italic')
             
             plt.figtext(0.9, 0.02, "@TheStatsWay", 
@@ -470,7 +469,7 @@ elif page == "Player Comparison Tool":
         p2 = st.selectbox("Select Player 2", 
                           sorted_players4)
 
-    categories = ['Goal-Scoring', 'Attack', 'Possession', 'Defense', 'Physical']
+    categories = ['Goal-Scoring', 'Attack','Dribbling', 'Possession', 'Defense', 'Physical']
 
     def get_player_stats1(player_name1):
         return df3_TF[df3_TF['Player'] == player_name1][categories].values.flatten().tolist()
@@ -512,7 +511,7 @@ elif page == "Player Comparison Tool":
     comparison_df = pd.concat([comparison_df3, comparison_df4])
 
     styled_df3 = comparison_df.style.map(style_grade_column, subset=['Grade'])\
-                   .format(precision=2, subset=['Goal-Scoring', 'Attack','Possession', 'Defense','Physical'])
+                   .format(precision=2, subset=['Goal-Scoring','Attack','Dribbling','Possession', 'Defense','Physical'])
     
     st.dataframe(styled_df3, 
                  width="stretch", 
@@ -520,7 +519,7 @@ elif page == "Player Comparison Tool":
                  height = 110)
 
     comparison_df['Player Info'] = comparison_df.index + " (" + comparison_df['Age'].astype(str) + ")"
-    comparison_cols = ['Player Info', 'Team', 'Goal-Scoring', 'Attack', 'Possession', 'Defense', 'Physical', 'Grade']
+    comparison_cols = ['Player Info', 'Team', 'Goal-Scoring', 'Attack','Dribbling','Possession', 'Defense', 'Physical', 'Grade']
     report_data = comparison_df[comparison_cols]
 
     st.write("---")
@@ -862,7 +861,7 @@ elif page == "Scatter Plot":
     The color of the player plot reflects the color of their grade where :
     Elite - S (Dark Green) to Very Poor - F (Red)
     """, icon="ℹ️")
-    allowed_metrics = ["Goal-Scoring","Attack", "Possession", "Defense","Physical","Age"]
+    allowed_metrics = ["Goal-Scoring","Attack","Dribbling","Possession", "Defense","Physical","Age"]
     variables = [m for m in allowed_metrics if m in df_TF.columns]
     
     x_axis = st.selectbox("X-Axis (Horizontal)", 
@@ -884,7 +883,7 @@ elif page == "Scatter Plot":
                 edgecolors='black', 
                 alpha=0.8)
         
-        ax.text(row[x_axis], row[y_axis]-2.5, 
+        ax.text(row[x_axis], row[y_axis]-3, 
                 row['Player'], 
                 color='black', 
                 ha='center', fontsize=7)
@@ -994,7 +993,7 @@ elif page == "Player Report Card":
     df = df[df.Position != "GK"]
     df = df.drop(columns=['Goalkeeping'])
 
-    variables = ['Goal-Scoring', 'Attack','Possession', 'Defense','Physical']
+    variables = ['Goal-Scoring', 'Attack','Dribbling','Possession', 'Defense','Physical']
 
     Season_filter = st.selectbox("Season:", 
                                 df['Season'].unique())
@@ -1067,7 +1066,7 @@ elif page == "Player Report Card":
                 alpha=0.8              
             ))
 
-    colors = ["#E40000FF", "#0400F5", "#edf100", "#1eff00", "#f88800"]
+    colors = ["#E6194B","#3CB44B","#FFE119","#4363D8","#F58231","#911EB4"]
 
     ax_bar.set_xlim(0, 100)
     ax_bar.set_xticks([0, 25, 50, 75, 100])
@@ -1173,7 +1172,7 @@ elif page == "Player Similarity Tool":
     df_supp_pos = df_supp[df_supp['Position']== Position_filter]
     df_supp_pos = df_supp_pos.dropna(subset=['Age'])
 
-    sim_features = ['Attack', 'Goal-Scoring', 'Defense', 'Possession', 'Physical']
+    sim_features = ['Goal-Scoring','Attack','Dribbling', 'Defense', 'Possession', 'Physical']
 
     st.write("""---""")
     st.subheader("🛠️ Similar Profiles - Age Filter")
@@ -1317,7 +1316,7 @@ elif page == "Team Comparison Tool":
 
     st.subheader("🛠️ Team Settings")
 
-    sim_features = ['Goal-Scoring', 'Attack', 'Possession', 'Defense', 'Physical']
+    sim_features = ['Goal-Scoring', 'Attack','Dribbling', 'Possession', 'Defense', 'Physical']
 
     s_filt = st.selectbox("Select Season:", df['Season'].unique(), key='heatmap_s')
     l_filt = st.selectbox("Select League:", df[df['Season']==s_filt]['League'].unique(), key='heatmap_l')
@@ -1441,18 +1440,18 @@ elif page == "Player Progression in a Team":
     filtered_df = df_PF.sort_values(by='Season', ascending=True)
 
     styled_df = df_PF.style.map(style_grade_column, subset=['Grade'])\
-                   .format(precision=2, subset=['Goal-Scoring', 'Attack','Possession', 'Defense','Physical','Goalkeeping'])
+                   .format(precision=2, subset=['Goal-Scoring', 'Attack','Dribbling','Possession', 'Defense','Physical','Goalkeeping'])
 
     st.dataframe(styled_df,
-                 column_order=("Season","League","Player","Team","Age","Position","Goal-Scoring","Attack","Possession","Defense","Physical","Goalkeeping","PosRank","Grade"),
+                 column_order=("Season","League","Player","Team","Age","Position","Goal-Scoring","Attack",'Dribbling',"Possession","Defense","Physical","Goalkeeping","PosRank","Grade"),
                  width="stretch",
                  hide_index=True,
-                 height = 143)
+                 height = 210)
     
     st.write("""---""")
 
     plot_df = df_PF[df_PF['Player'] == Player_filter].sort_values('Season')
-    target_seasons = ['2023/24', '2024/25', '2025/26']
+    target_seasons = ['2021/22','2022/23','2023/24', '2024/25', '2025/26']
     plot_df = plot_df[plot_df['Season'].isin(target_seasons)]
     plot_df = plot_df.drop_duplicates(subset=['Season'], keep='last').sort_values('Season')
 
@@ -1468,45 +1467,49 @@ elif page == "Player Progression in a Team":
         metrics = ['Goalkeeping']
         colors = ['#1A73E8'] 
     else:
-        metrics = ['Goal-Scoring', 'Attack', 'Possession', 'Defense', 'Physical']
-        colors = ['#E63946', '#1A73E8', '#2A9D8F', '#F4A261', '#8D99AE']
+        metrics = ['Goal-Scoring', 'Attack','Dribbling', 'Possession', 'Defense', 'Physical']
+        colors = ['#E63946', '#1A73E8',"#A723CF", '#2A9D8F', '#F4A261', '#8D99AE']
 
-    season_colors = ["#5da5da", "#faa43a", "#60bd68"]
-
+    season_colors = ["#CAF0F8","#90E0EF","#00B4D8","#0077B6","#03045E"]
+    
     fig = plt.figure(figsize=(20, 14), facecolor='#F8F9FA')
-    gs = gridspec.GridSpec(2, 2, width_ratios=[1.2, 2.8], height_ratios=[1, 1], hspace=0.3, wspace=0.2)
+    gs = gridspec.GridSpec(2, 2, width_ratios=[1.5, 3], height_ratios=[1, 1], hspace=0.3, wspace=0.2)
 
     ax_info = fig.add_subplot(gs[:, 0])
     ax_info.axis('off')
     ax_info.text(0.05, 1.05, Player_filter.upper(), fontsize=28, fontweight='bold')
     ax_info.text(0.05, 1.025, f"{plot_df.iloc[-1]['Team']} | {plot_df.iloc[-1]['Age']}y", fontsize=14, color='#6C757D', fontweight='bold')
-    y_offset = 0.95
+    y_offset = 0.975
 
     for _, row in plot_df.iloc[::-1].iterrows():
         ax_info.text(0.05, y_offset, f"▼ Season {row['Season']} ▼", fontsize=13, color='#6C757D', fontweight='bold')
-        ax_info.text(0.05, y_offset-0.03, f"League: {row['League']}", fontsize=12)
-        ax_info.text(0.05, y_offset-0.0525, f"Position: {row['Position']}", fontsize=12)
-        ax_info.text(0.05, y_offset-0.075, f"Grade: {row['Grade']}", fontsize=12, fontweight='bold')
-        y_offset -= 0.13
+        ax_info.text(0.05, y_offset-0.02, f"League: {row['League']}", fontsize=12)
+        ax_info.text(0.05, y_offset-0.04, f"Position: {row['Position']}", fontsize=12)
+        ax_info.text(0.05, y_offset-0.06, f"Grade: {row['Grade']}", fontsize=12, fontweight='bold')
+        y_offset -= 0.1
 
-    ax_info.text(0.05, 0.455, "DEVELOPMENT SUMMARY", fontsize=14, fontweight='bold')
+    ax_info.text(0.05, 0.45, "DEVELOPMENT SUMMARY", fontsize=14, fontweight='bold')
 
     for i, m in enumerate(metrics):
         diff = plot_df.iloc[-1][m] - plot_df.iloc[0][m]
         color = '#2A9D8F' if diff >= 0 else '#E63946'
         symbol = "▲" if diff >= 0 else "▼"
-        y_pos = (0.35) - (i * 0.07)
+        y_pos = (0.35) - (i * 0.065)
         ax_info.text(0.05, y_pos, m, fontsize=13, color='#6C757D', fontweight='bold')
         ax_info.text(0.55, y_pos, f"{symbol} {abs(diff):.1f}", fontsize=12, fontweight='bold', color=color)
 
     ax_bar = fig.add_subplot(gs[0, 1])
     y = np.arange(len(metrics))
-    width = 0.25 
+
+    #width = 0.175 
+
+    num_seasons = len(season_labels) 
+    width = (6 - num_seasons)/11
 
     for i in range(num_seasons):
-        offset = (width * (num_seasons - 1) / 2) - (i * width)
+        offset = (width * (num_seasons-1) / 2) - (i * width)
         ax_bar.barh(y + offset, plot_df.iloc[i][metrics], width, 
-                    label=season_labels[i], color=season_colors[i], alpha=0.8 if i < num_seasons-1 else 1.0)
+                    label=season_labels[i], color=season_colors[i], alpha=1 if i < num_seasons-1 else 1.0, edgecolor='black')    # The outline color
 
     ax_bar.set_yticks(y)
     ax_bar.invert_yaxis()
@@ -1598,6 +1601,7 @@ elif page == "Player Search Hub":
 
     goal_min = st.slider("Minimum Goal-Scoring", 0, 100, 0)
     attack_min = st.slider("Minimum Attack", 0, 100, 0)
+    dribbling_min = st.slider("Minimum Dribbling", 0, 100, 0)
     poss_min = st.slider("Minimum Possession", 0, 100, 0)
     def_min = st.slider("Minimum Defense", 0, 100, 0)
     phys_min = st.slider("Minimum Physical", 0, 100, 0)
@@ -1610,6 +1614,7 @@ elif page == "Player Search Hub":
         (df['Age'] <= age_max) &
         (df['Goal-Scoring'] >= goal_min) &
         (df['Attack'] >= attack_min) &
+        (df['Dribbling'] >= dribbling_min) &
         (df['Possession'] >= poss_min) &
         (df['Defense'] >= def_min) &
         (df['Physical'] >= phys_min)
@@ -1619,20 +1624,21 @@ elif page == "Player Search Hub":
     st.title("🔍 Player Search Hub")
     st.markdown(f"Finding players that match your requirements.")
 
-    col1, col2, col3, col4, col5, col6, col7, col8  = st.columns(8)
+    col1, col2, col3, col4, col5, col6, col7, col8, col9  = st.columns(9)
     col1.metric("Results Found", len(filtered_df))
     col2.metric("Avg. Age", f"{round(filtered_df['Age'].mean(), 1) if not filtered_df.empty else '0'}")
     col3.metric("Most Common Grade", f"{filtered_df['Grade'].mode()[0] if not filtered_df.empty else 'N/A'}")
     col4.metric("Avg. Goal-Scoring", f"{round(filtered_df['Goal-Scoring'].mean(), 1) if not filtered_df.empty else '0'}")
     col5.metric("Avg. Attack", f"{round(filtered_df['Attack'].mean(), 1) if not filtered_df.empty else '0'}")
-    col6.metric("Avg. Possession", f"{round(filtered_df['Possession'].mean(), 1) if not filtered_df.empty else '0'}")
-    col7.metric("Avg. Defense", f"{round(filtered_df['Defense'].mean(), 1) if not filtered_df.empty else '0'}")
-    col8.metric("Avg. Physical", f"{round(filtered_df['Physical'].mean(), 1) if not filtered_df.empty else '0'}")
+    col6.metric("Avg. Dribbling", f"{round(filtered_df['Dribbling'].mean(), 1) if not filtered_df.empty else '0'}")
+    col7.metric("Avg. Possession", f"{round(filtered_df['Possession'].mean(), 1) if not filtered_df.empty else '0'}")
+    col8.metric("Avg. Defense", f"{round(filtered_df['Defense'].mean(), 1) if not filtered_df.empty else '0'}")
+    col9.metric("Avg. Physical", f"{round(filtered_df['Physical'].mean(), 1) if not filtered_df.empty else '0'}")
 
-    filtered_df['Skill Score'] = filtered_df[['Goal-Scoring', 'Attack', 'Possession', 'Defense', 'Physical']].mean(axis=1)
+    filtered_df['Skill Score'] = filtered_df[['Goal-Scoring', 'Attack', 'Dribbling' , 'Possession', 'Defense', 'Physical']].mean(axis=1)
 
     if not filtered_df.empty:
-        display_cols = ['Season','League','Player', 'Team', 'Age', 'Position', 'Goal-Scoring', 'Attack', 'Possession', 'Defense', 'Physical','Grade', 'Skill Score']
+        display_cols = ['Season','League','Player', 'Team', 'Age', 'Position', 'Goal-Scoring', 'Attack', 'Dribbling', 'Possession', 'Defense', 'Physical','Grade', 'Skill Score']
         
         st.dataframe(
             filtered_df[display_cols].sort_values('Skill Score', ascending=False),
@@ -1642,7 +1648,7 @@ elif page == "Player Search Hub":
             column_config={
                 "Skill Score": st.column_config.ProgressColumn(
                     "Metric Average",
-                    help="Average of the 5 core scouting metrics",
+                    help="Average of the 6 core scouting metrics",
                     format="%.1f",
                     min_value=0,
                     max_value=100,
@@ -1652,9 +1658,9 @@ elif page == "Player Search Hub":
     else:
         st.info("No players found matching these exact criteria. Try lowering the thresholds!")
 
-elif page == "Team Recruitment Tool":
+elif page == "Team Recruitment Identifier":
     st.write("""---""")
-    st.title("12 - Team Recruitment Tool ")
+    st.title("12 - Team Recruitment Identifier Hub ")
     st.write("Find players that fit the teams needs.")
     st.info(
     """
@@ -1674,7 +1680,7 @@ elif page == "Team Recruitment Tool":
 
     df_LF = df[df['League'] == league_filter]
 
-    metrics = ['Goal-Scoring', 'Attack', 'Possession', 'Defense', 'Physical','Goalkeeping']
+    metrics = ['Goal-Scoring', 'Attack', 'Dribbling' , 'Possession', 'Defense', 'Physical','Goalkeeping']
 
     teams = df_LF['Team'].unique().tolist()
     sorted_teams = sorted(teams)
@@ -1697,7 +1703,7 @@ elif page == "Team Recruitment Tool":
     existing_order = [p for p in pos_order if p in team_avg.index]
 
     team_avg = team_avg.reindex(existing_order)
-    st.subheader(f"📊 {Team_filter} - Positional Review - Average Scores")
+    st.subheader(f"📊 {Team_filter} - Positional DNA")
     
     def highlight_low_scores(val):
         if val == 0:
@@ -1828,7 +1834,7 @@ elif page == "Team Recruitment Tool":
     st.header("💎 Analysing: Star Upgrades")
     st.info("These potential targets outperform the current squad average in every single performance category for their position.")
 
-    outfield_metrics = ['Goal-Scoring', 'Attack', 'Possession', 'Defense', 'Physical']
+    outfield_metrics = ['Goal-Scoring', 'Attack', 'Dribbling', 'Possession', 'Defense', 'Physical']
     gk_metrics = ['Goalkeeping']
 
     for pos in pos_order:
