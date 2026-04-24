@@ -13,6 +13,7 @@ import seaborn as sns
 import matplotlib.gridspec as gridspec
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics.pairwise import cosine_similarity
+import matplotlib.patheffects as path_effects
 
 st.set_page_config(
     page_title="TheStatsWay",
@@ -35,7 +36,7 @@ with st.sidebar:
     st.markdown("<div class='sidebar-title'> </div>", unsafe_allow_html=True)
     st.info("💡 **Page Selection:**")
 
-    page = st.sidebar.radio("Pages:", ["Instructions & Abbreviations","Player Stats - Player Overview","Player Stats - Team Overview","Player Comparison Tool",
+    page = st.sidebar.radio("Pages:", ["Instructions & Abbreviations","Player Stats - Player Overview","Player Stats - Team Overview","Two Player Comparison Tool","Three Player Comparison Tool",
                                        "Lineup Builder","Scatter Plot","Interactive Plot","Player Report Card","Player Similarity Tool","Team Comparison Tool",
                                        "Player Progression in a Team","Player Search Hub","Team Recruitment Identifier"],
                                     label_visibility="collapsed")
@@ -72,8 +73,8 @@ def style_grade_column(val):
 grade_order = ['S', 'A', 'B', 'C', 'D', 'E', 'F']
 
 st.sidebar.divider()
-st.sidebar.write("𝐯𝟏.𝟎.𝟏𝟎")
-st.sidebar.write("Data Last Updated: Mar 12, 2026")
+st.sidebar.write("𝐯𝟏.𝟎.𝟏𝟏")
+st.sidebar.write("Data Last Updated: Abr 21, 2026")
 
 if page == "Instructions & Abbreviations":
     st.write("""---""")
@@ -83,7 +84,8 @@ if page == "Instructions & Abbreviations":
     st.write("""      
     - **Player Stats - Player Overview:** Browse through the players performance metrics.
     - **Player Stats - Team Overview:** Browse through the players performance metrics for a specific team.
-    - **Player Comparison Tool:** Create a performance radar comparison on the outfield players based on our metrics.
+    - **Two Player Comparison Tool:** Create a performance radar comparison on the outfield players based on our metrics.
+    - **Three Player Comparison Tool:** Create a performance radar comparison on the outfield players based on our metrics.
     - **Lineup Builder:** Create a teams lineup with the grades for the selected players.
     - **Scatter Plot:** Create a plot with the desired combination of the variables.
     - **Interactive Plot:** Create an interactive plot with the desired combination of the variables.
@@ -91,7 +93,8 @@ if page == "Instructions & Abbreviations":
     - **Player Similarity Tool:** Find the players with the most similar data profile based on our metrics.
     - **Team Comparison Tool:** Create a teams profile per position based on the mean values of the players.
     - **Player Progression in a Team:** Review and analyze a player’s trajectory in the same team.
-    - **Player Search Hub:** Find players that match your performance requirements.""")
+    - **Player Search Hub:** Find players that match your performance requirements.
+    - **Team Recruitment Identifier:** Find players that fit the teams needs.""")
     st.write("""---""")
     st.info("Position Abreviations:", icon="ℹ️")
     st.write("""            
@@ -402,9 +405,9 @@ elif page == "Player Stats - Team Overview":
             st.warning("No players found in the current filter.")
 
 
-elif page == "Player Comparison Tool":
+elif page == "Two Player Comparison Tool":
     st.write("""---""")
-    st.title("3 - Player Comparison Tool")
+    st.title("3 - Two Player Comparison Tool")
     st.write("Create a performance radar comparison on the outfield players based on our metrics.")
     st.info(
     """
@@ -516,7 +519,7 @@ elif page == "Player Comparison Tool":
     st.dataframe(styled_df3, 
                  width="stretch", 
                  hide_index=True,
-                 height = 110)
+                 height = 107)
 
     comparison_df['Player Info'] = comparison_df.index + " (" + comparison_df['Age'].astype(str) + ")"
     comparison_cols = ['Player Info', 'Team', 'Goal-Scoring', 'Attack','Dribbling','Possession', 'Defense', 'Physical', 'Grade']
@@ -615,9 +618,217 @@ elif page == "Player Comparison Tool":
                 mime="image/png"
             )
 
+elif page == "Three Player Comparison Tool":
+    st.write("""---""")
+    st.title("4 - Three Player Comparison Tool")
+    st.write("Create a performance radar comparison on the outfield players based on our metrics.")
+    st.info(
+    """
+    Liga Portugal  -  Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
+    """, icon="ℹ️")
+
+    st.subheader("🛠️ Player Settings")
+    df = df[df.Position != "GK"]
+    df = df.drop(columns=['Goalkeeping'])
+
+    Season_filter = st.selectbox("Season:", 
+                                df['Season'].unique())
+    
+    df_SF = df[df['Season']== Season_filter]
+
+    League_filter = st.selectbox("League:", 
+                                df_SF['League'].unique())
+       
+    df_LF = df_SF[df_SF['League'] == League_filter]
+
+    Position_filter3 = st.selectbox("Position:", df['Position'].unique())
+    df_PF = df_LF[df_LF['Position'] == Position_filter3]
+
+    sorted_teams = sorted(df_PF['Team'].unique().tolist())
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        t1 = st.selectbox("Select Team 1:", sorted_teams, key="team1")
+        df3_TF = df_PF[df_PF['Team'] == t1]
+
+    with col2:
+        idx2 = 1 if len(sorted_teams) > 1 else 0
+        t2 = st.selectbox("Select Team 2:", sorted_teams, index=idx2, key="team2")
+        df4_TF = df_PF[df_PF['Team'] == t2]
+
+    with col3:
+        idx3 = 2 if len(sorted_teams) > 2 else 0
+        t3 = st.selectbox("Select Team 3:", sorted_teams, index=idx3, key="team3")
+        df5_TF = df_PF[df_PF['Team'] == t3]
+
+    col4, col5, col6 = st.columns(3)
+
+    with col4:
+        p1 = st.selectbox("Select Player 1", sorted(df3_TF['Player'].unique()), key="p1")
+    with col5:
+        p2 = st.selectbox("Select Player 2", sorted(df4_TF['Player'].unique()), key="p2")
+    with col6:
+        p3 = st.selectbox("Select Player 3", sorted(df5_TF['Player'].unique()), key="p3")
+
+    categories = ['Goal-Scoring', 'Attack', 'Dribbling', 'Possession', 'Defense', 'Physical']
+
+    def get_stats(df_source, player_name):
+        return df_source[df_source['Player'] == player_name][categories].values.flatten().tolist()
+
+    stats1 = get_stats(df3_TF, p1)
+    stats2 = get_stats(df4_TF, p2)
+    stats3 = get_stats(df5_TF, p3)
+
+    fig = go.Figure()
+
+    radar_data = [(stats1, p1, 'blue'), (stats2, p2, 'red'), (stats3, p3, 'green')]
+
+    for stats, name, color in radar_data:
+        fig.add_trace(go.Scatterpolar(
+            r=stats,
+            theta=categories,
+            fill='toself',
+            name=name,
+            line_color=color
+        ))
+
+    fig.update_layout(
+        polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
+        showlegend=True,
+        height=650,
+        margin=dict(l=80, r=80, t=100, b=80),
+        legend=dict(title=dict(
+                    text="<span style='color:black'><b>Selected Players:</b></span><br> ",                    
+                    font=dict(size=16)),
+                    orientation="v",    
+                    yanchor="top",
+                    y=1,               
+                    xanchor="left",
+                    x=0.8,
+                    font=dict(size=14)))
+
+    st.plotly_chart(fig, width='stretch')
+
+    st.subheader("Direct Comparison Table")
+
+    comparison_df = pd.concat([
+        df3_TF[df3_TF['Player'] == p1],
+        df4_TF[df4_TF['Player'] == p2],
+        df5_TF[df5_TF['Player'] == p3]
+    ]).set_index('Player')
+
+    styled_df = comparison_df.style.map(style_grade_column, subset=['Grade'])\
+        .format(precision=3, subset=categories)
+
+    st.dataframe(styled_df, width='stretch', hide_index=False, height=142)
+
+    comparison_df['Player Info'] = comparison_df.index + " (" + comparison_df['Age'].astype(str) + ")"
+    comparison_cols = ['Player Info', 'Team'] + categories + ['Grade']
+    report_data = comparison_df[comparison_cols]
+
+    st.write("---")
+
+    if st.button(f"🖼️ Generate H2H Report ({p1} vs {p2} vs {p3})", icon=":material/compare_arrows:"):
+        
+        if not report_data.empty:
+
+            num_vars = len(categories)
+            angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
+
+            angles += angles[:1]
+            stats1 += stats1[:1]
+            stats2 += stats2[:1]
+            stats3 += stats3[:1]
+
+            fig_width = 10
+            fig_height = 10
+
+            fig = plt.figure(figsize=(fig_width, fig_height), facecolor='#F8F9FA')
+            
+            ax_radar = fig.add_subplot(2, 1, 1, polar=True)
+            ax_radar.set_theta_offset(np.pi / 2) 
+            ax_radar.set_theta_direction(-1) 
+
+            ax_radar.plot(angles, stats1, color='blue', linewidth=2, label=p1)
+            ax_radar.fill(angles, stats1, color='blue', alpha=0.25)
+
+            ax_radar.plot(angles, stats2, color='red', linewidth=2, label=p2)
+            ax_radar.fill(angles, stats2, color='red', alpha=0.25)
+
+            ax_radar.plot(angles, stats3, color='green', linewidth=2, label=p3)
+            ax_radar.fill(angles, stats3, color='green', alpha=0.25)
+
+            ax_radar.set_thetagrids(np.degrees(angles[:-1]), categories)
+            ax_radar.tick_params(axis='x', pad=15)
+            ax_radar.set_rlabel_position(25)
+            ax_radar.set_yticks([25, 50, 75, 100])
+            ax_radar.set_yticklabels(["25", "50", "75", "100"], color="black", size=8)
+            ax_radar.set_ylim(0, 100)
+            ax_radar.grid(True, linestyle='--', color='lightgrey')
+            ax_radar.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
+ 
+            ax_table = fig.add_subplot(2, 1, 2)
+            ax_table.axis('off') 
+
+            table = ax_table.table(
+                cellText=report_data.values, 
+                colLabels=report_data.columns, 
+                cellLoc='center', 
+                loc='center'
+            )
+
+            table.auto_set_font_size(False)
+            table.set_fontsize(10)
+            table.auto_set_column_width(col=list(range(len(report_data.columns))))
+            
+            table.scale(1, 3.5)
+
+            for (row, col) in table.get_celld():
+                cell = table.get_celld()[(row, col)]
+                cell.set_edgecolor('#DEE2E6')
+                
+                if row == 0:
+                    cell.set_text_props(weight='bold', color='white')
+                    cell.set_facecolor("#000000")
+                else:
+                    if row == 1:
+                        cell.set_facecolor('#F0F7FF')
+                    elif row == 2:
+                        cell.set_facecolor('#FFF0F0')
+                    elif row == 3:
+                        cell.set_facecolor('#F0FFF0')
+
+                    if report_data.columns[col] == 'Grade':
+                        grade_val = cell.get_text().get_text()
+                        bg_color = get_grade_color(grade_val)
+                        cell.set_facecolor(bg_color)
+                        cell.set_text_props(weight='bold', color='black')
+
+            fig.suptitle(f"Player Comparison Report", 
+                    color="#000000", fontsize=22, fontweight='bold', y=0.98)
+            
+            plt.figtext(0.5, 0.93, f"{p1} & {p2} & {p3} (Season: {Season_filter} + League: {League_filter})", 
+                        fontsize=12, color="#000000", ha='center', style='italic')
+            
+            plt.figtext(0.9, 0.05, "@TheStatsWay", 
+                        horizontalalignment='right', size=12, color="#000000", style='italic', fontweight='bold')
+
+            plt.tight_layout(rect=[0, 0.03, 1, 0.95]) 
+            st.pyplot(fig)
+
+            buf = io.BytesIO()
+            fig.savefig(buf, format="png", dpi=300, bbox_inches="tight")
+            st.download_button(
+                label="📥 Download Comparison Image",
+                data=buf.getvalue(),
+                file_name=f"H2H_Comparison_{p1}_{p2}_{p3}.png",
+                mime="image/png"
+            )
+
 elif page == "Lineup Builder":
     st.write("""---""")
-    st.title("4 - Lineup Builder")
+    st.title("5 - Lineup Builder")
     st.write("Create a teams lineup with the grades for the selected players.")
     st.info(
     """
@@ -629,27 +840,33 @@ elif page == "Lineup Builder":
         "GK": (11, 40),
         "RCB": (30, 53),"LCB": (30, 27),"RB": (39, 70),"LB": (39, 10),
         "RCM": (64, 60),"CM": (52, 40),"LCM": (64, 20),
-        "RW": (85, 67),"CF": (100, 40),"LW": (85, 13),
+        "RW": (85, 67),"CF": (110, 40),"LW": (85, 13),
     },
     "4-4-2": {
         "GK": (11, 40),
         "RCB": (30, 53),"LCB": (30, 27),"RB": (39, 70),"LB": (39, 10),
         "RCM": (60, 55),"LCM": (60, 25), "RM": (74, 67),"LM": (74, 13),
-        "RS": (100, 55), "LS": (100, 25)
+        "RF": (110, 55), "LF": (110, 25)
     },
      "4-2-3-1": {
         "GK": (11, 40),
         "RCB": (30, 53),"LCB": (30, 27),"RB": (39, 70),"LB": (39, 10),
         "RCM": (60, 55),"LCM": (60, 25),
         "RW": (85, 67), "AM": (85, 40), "LW": (85, 13),
-        "CF": (100, 40)
+        "CF": (110, 40)
     },
     "5-2-2-1": {
         "GK": (11, 40),
-        "RCB": (33, 60), "CCB": (26,40), "LCB": (33, 20), "RWB": (48, 70), "LWB": (48, 10),
+        "RCB": (33, 60), "CCB": (25,40), "LCB": (33, 20), "RWB": (48, 70), "LWB": (48, 10),
         "RCM": (60, 55), "LCM": (60, 25),
         "RW": (85, 67), "LW": (85, 13),
-        "CF": (100, 40)
+        "CF": (110, 40)
+    },
+    "5-3-2": {
+        "GK": (11, 40),
+        "RCB": (33, 60), "CCB": (25,40), "LCB": (33, 20), "RWB": (48, 70), "LWB": (48, 10),
+        "RCM": (74, 60),"CM": (62, 40),"LCM": (74, 20),
+        "RF": (110, 55), "LF": (110, 25)
     }}
 
     PositionIndex = {
@@ -669,30 +886,10 @@ elif page == "Lineup Builder":
          "AM": "AM & W",
          "LW": "AM & W",
          "RW": "AM & W",
-         "LS": "CF",
-         "RS": "CF",
+         "LF": "CF",
+         "RF": "CF",
          "CF": "CF"
     }
-
-    st.subheader("🛠️ Lineup Settings")
-
-    Season_filter = st.selectbox("Season:", 
-                                df['Season'].unique())
-    
-    df_SF = df[df['Season']== Season_filter]
-
-    League_filter = st.selectbox("League:", 
-                                df_SF['League'].unique())
-    
-    df_LF = df_SF[df_SF['League']== League_filter]
-
-    teams = df_LF['Team'].unique().tolist()
-    sorted_teams = sorted(teams)
-
-    Team_filter = st.selectbox("Team:", 
-                                options=sorted_teams)
-    
-    df_TF = df_LF[df_LF['Team']== Team_filter]
 
     if 'current_formation' not in st.session_state:
         st.session_state.current_formation = "4-3-3"
@@ -701,6 +898,17 @@ elif page == "Lineup Builder":
 
     def reset_lineup():
         st.session_state.lineup = {}
+        
+    st.subheader("🛠️ Lineup Settings")
+
+    Season_filter = st.selectbox("Season:", 
+                                df['Season'].unique())
+    
+    df_SF = df[df['Season']== Season_filter]
+
+    selected_formation = st.selectbox("Choose Formation", 
+                                        options=list(formations.keys()), 
+                                        on_change=reset_lineup)
 
     st.subheader("📋 Select Your Eleven")
 
@@ -712,100 +920,120 @@ elif page == "Lineup Builder":
 
     footer_tag = "@TheStatsWay"
 
+    outfield_categories =  ['Goal-Scoring','Attack','Dribbling','Possession', 'Defense', 'Physical']
+    metric_colors = ['#FFD700', '#FF4B4B', '#A020F0', '#1E90FF', '#32CD32', '#8B4513']
          
-    selected_formation = st.selectbox("Choose Formation", 
-                                        options=list(formations.keys()), 
-                                        on_change=reset_lineup)
-        
     plot_data = {}
 
-    for pos,coords in formations[selected_formation].items():
-
-            broad_category = PositionIndex.get(pos)
+    for pos, coords in formations[selected_formation].items():
+        broad_category = PositionIndex.get(pos)
+        pos_data = df_SF[df_SF['Position'] == broad_category]
         
-            filtered_players = df_TF[df_TF['Position'] == broad_category]['Player'].tolist()
+        col_league, col_team, col_player = st.columns(3)
 
-            taken_elsewhere = [name for p, name in st.session_state.lineup.items() if p != pos]
-            available = [p for p in filtered_players if p not in taken_elsewhere]
+        with col_league:
+            available_leagues = sorted(pos_data['League'].unique().tolist())
+            league_choice = st.selectbox(f"League ({pos})", 
+                                    ["Select League"] + available_leagues, 
+                                    key=f"l_{pos}")
+        
+        with col_team:
+            if league_choice != "Select League":
+                team_filtered_data = pos_data[pos_data['League'] == league_choice]
+                available_teams = sorted(team_filtered_data['Team'].unique().tolist())
+            else:
+                available_teams = []
 
-            current_selection = st.session_state.lineup.get(pos, "Select Player")
+            team_choice = st.selectbox(f"Team ({pos})", 
+                                       ["Select Team"] + available_teams, 
+                                       key=f"t_{pos}")
+
+        with col_player:
+            available_players = []
+            if team_choice != "Select Team":
+                team_pos_players = pos_data[pos_data['Team'] == team_choice]['Player'].tolist()
+                taken = [name for p, name in st.session_state.lineup.items() if p != pos]
+                available_players = [p for p in team_pos_players if p not in taken]
+
+            current = st.session_state.lineup.get(pos, "Select Player")
+            choice = st.selectbox(f"Player ({pos})", 
+                                ["Select Player"] + available_players, 
+                                index=0 if current not in available_players else available_players.index(current)+1,
+                                key=f"p_{pos}")
+
+        if choice != "Select Player":
+            st.session_state.lineup[pos] = choice
+            p_row = df_SF[df_SF['Player'] == choice].iloc[0]
             
-            if current_selection not in available:
-                current_selection = "Select Player"
+            if pos == "GK":
+                stats = {"Goalkeeping": p_row.get('Goalkeeping', 0)}
+            else:
+                stats = p_row[outfield_categories].to_dict()
 
-            choice = st.selectbox(f"{pos}", 
-                                options=["Select Player"] + available,
-                                index=0 if current_selection == "Select Player" else available.index(current_selection) + 1,
-                                key=f"sel_{selected_formation}_{pos}")
+            plot_data[pos] = {
+                "name": choice, "grade": p_row['Grade'],
+                "x": coords[0], "y": coords[1], "metrics": stats, "team": team_choice
+            }
 
-            if choice != "Select Player":
-                st.session_state.lineup[pos] = choice
-                grade = df_TF[df_TF['Player'] == choice]['Grade'].iloc[0]
-                plot_data[pos] = {"name": choice, 
-                                "grade": grade, 
-                                "x": coords[0], 
-                                "y": coords[1]}
-            
-    pitch = VerticalPitch(pitch_type='statsbomb', 
-                            pitch_color="#1a7953", 
-                            line_color='#c7d5cc')
-    fig, ax = pitch.draw(figsize=(6, 7))
+    pitch = VerticalPitch(pitch_type='statsbomb', pitch_color="#1a7953", line_color='#c7d5cc')
+    fig, ax = pitch.draw(figsize=(7, 9))
 
     for pos, info in plot_data.items():
-
-            grade_color = get_grade_color(info['grade'])
-            ax.set_title(f"{Season_filter} - {Team_filter} - {selected_formation}", color='Black', fontsize=14, fontweight='bold', pad=20)
-            ax.text(0.92, 0.98, "https://thestatsway-scouting-talent-in-portugal-app.streamlit.app/", transform=ax.transAxes, 
-            color='Black', fontsize=7, fontweight='bold',
-            ha='right', va='bottom', alpha=0.7)
-                    
-            pitch.scatter(info['x'], 
-                        info['y'], 
-                        c=grade_color,
-                        s=800,  
-                        edgecolors='white', 
-                        linewidth=1, 
-                        ax=ax, 
-                        zorder=3)
+        grade_color = get_grade_color(info['grade'])
+        px, py = info['x'], info['y']
         
-            pitch.annotate(str(info['grade']), 
-                        xy=(info['x'], info['y']), 
-                        va='center', ha='center', 
-                        color='black', fontsize=14, fontweight='bold', ax=ax, zorder=4)
-            
-            pitch.annotate(info['name'], xy=(info['x'] - 6, info['y']), 
-                        va='center', ha='center', color='black', 
-                        fontsize=10, fontweight='bold', ax=ax, zorder=4)
+        pitch.scatter(px, py, c=grade_color, s=1200, edgecolors='white', linewidth=2, ax=ax, zorder=3)
+        pitch.annotate(str(info['grade']), xy=(px, py), va='center', ha='center', 
+                    color='black', fontsize=12, fontweight='bold', ax=ax, zorder=4)
         
-            pitch.annotate(pos, xy=(info['x'] - 9, info['y']), 
-                        va='center', ha='center', color="black",
-                        fontsize=9, ax=ax, zorder=4)
-            
-            pitch.annotate(pos, 
-                        xy=(info['x'] - 9, info['y']), 
-                        va='center', ha='center', color="black",
-                        fontsize=9, ax=ax, zorder=4)
+        playername = f"{info['name']} ({pos})"
 
-            ax.text(0.9475, 0.04, footer_tag, transform=ax.transAxes, 
-            color='Black', fontsize=7, fontweight='bold',
-            ha='right', va='bottom', alpha=0.7)
+        pitch.annotate(playername, xy=(px - 3, py), va='center', ha='center', 
+                    color='white', fontsize=9, fontweight='bold', 
+                    bbox=dict(facecolor='black', alpha=0.7, boxstyle='round,pad=0.2'), ax=ax, zorder=4)
+
+        if pos == "GK":
+            gk_val = info['metrics']['Goalkeeping']
+            pitch.annotate(f"Goalkeeping: {gk_val:.0f}", xy=(px - 8, py), 
+                            va='center', ha='center', color="red", fontsize=9, fontweight='bold', ax=ax, zorder=4,
+                    path_effects=[plt.matplotlib.patheffects.withStroke(linewidth=1.5, foreground='black')],
+                    bbox=dict(facecolor='black', alpha=0.8, boxstyle='round',pad=0.2),)
+        else:
+            for i, (val, color) in enumerate(zip(info['metrics'].values(), metric_colors)):
+                horizontal_offset = (i - 2.5) * 3
+                pitch.annotate(f"{val:.0f}", xy=(px - 8, py + horizontal_offset), 
+                            va='center', ha='center', color=color, 
+                            fontsize=8.5, fontweight='bold', 
+                            path_effects=[plt.matplotlib.patheffects.withStroke(linewidth=1.5, foreground='black')],
+                            bbox=dict(facecolor='black', alpha=1, boxstyle='round',pad=0.1),
+                            ax=ax, zorder=4)
+
+        pitch.annotate(info['team'], xy=(px - 5.5, py), va='center', ha='center', 
+                    color="white", fontsize=9, fontweight='bold', ax=ax, zorder=4,
+                    path_effects=[plt.matplotlib.patheffects.withStroke(linewidth=1.5, foreground='black')],
+                    bbox=dict(facecolor='black', alpha=0.8, boxstyle='round',pad=0.2),)
+
+    for i, (cat, col) in enumerate(zip(outfield_categories, metric_colors)):
+        ax.scatter(2.5 + (i * 13.5), 122, color=col, s=60, edgecolors='white')
+        ax.text(4 + (i * 13.5), 122, cat, color='white', fontsize=6.5, fontweight='bold', va='center')
+
+    ax.text(0.945, 0.04, footer_tag, transform=ax.transAxes, 
+            color='Black', fontsize=8, fontweight='bold',
+            ha='right', va='bottom', alpha=1)
 
     st.pyplot(fig)
-
     buf = io.BytesIO()
     fig.savefig(buf, format="png", dpi=300, bbox_inches="tight")
 
     st.download_button(
             label="📥 Download Lineup Image",
             data=buf.getvalue(),
-            file_name=f"{Team_filter}_lineup.png",
+            file_name=f"{Season_filter}_Season_{selected_formation}_Lineup_Builder.png",
             mime="image/png")
-
-
         
 elif page == "Scatter Plot":
     st.write("""---""")
-    st.title("5 - Simple Scatter Plot")
+    st.title("6 - Simple Scatter Plot")
     st.write("Create a plot with the desired combination of the variables.")
     st.info(
     """
@@ -913,7 +1141,7 @@ elif page == "Scatter Plot":
     
 elif page == "Interactive Plot":
     st.write("""---""")
-    st.title("6 - Interactive Plot")
+    st.title("7 - Interactive Plot")
     st.write("Create an interactive plot with the desired combination of the variables.")
     st.info(
     """
@@ -982,7 +1210,7 @@ elif page == "Interactive Plot":
 
 elif page == "Player Report Card":
     st.write("""---""")
-    st.title("7 - Player Report Card")
+    st.title("8 - Player Report Card")
     st.write("Create a player report card for the player you want.")
     st.info(
     """
@@ -1129,7 +1357,7 @@ elif page == "Player Report Card":
 
 elif page == "Player Similarity Tool":
     st.write("""---""")
-    st.title("8 - Player Similarity Tool")
+    st.title("9 - Player Similarity Tool")
     st.write("Find the players with the most similar data profile based on our metrics.")
     st.info(
     """
@@ -1172,18 +1400,25 @@ elif page == "Player Similarity Tool":
     df_supp_pos = df_supp[df_supp['Position']== Position_filter]
     df_supp_pos = df_supp_pos.dropna(subset=['Age'])
 
-    sim_features = ['Goal-Scoring','Attack','Dribbling', 'Defense', 'Possession', 'Physical']
+    sim_features = ['Goal-Scoring','Attack', 'Dribbling', 'Defense', 'Possession', 'Physical']
 
     st.write("""---""")
-    st.subheader("🛠️ Similar Profiles - Age Filter")
+    st.subheader("🛠️ Similar Profiles Settings")
 
     min_age = int(df_supp_pos['Age'].min())
     max_age = int(df_supp_pos['Age'].max())
+    
+    if min_age < max_age:
+        age_range = st.slider(
+            "Age Range:",
+            min_value=min_age,
+            max_value=max_age,
+            value=(min_age, max_age)
+    )
+    else:
+        age_range = (min_age, min_age)
 
-    age_range = st.slider("Age Range for the Similar Profiles to display:",
-                        min_value=min_age,
-                        max_value=max_age,
-                        value=(min_age, max_age))
+    df_supp_pos = df_supp_pos[(df_supp_pos['Age'] >= age_range[0]) & (df_supp_pos['Age'] <= age_range[1])]
 
     st.subheader("⤵️ Search Button")
 
@@ -1304,7 +1539,7 @@ elif page == "Player Similarity Tool":
 
 elif page == "Team Comparison Tool":
     st.write("""---""")
-    st.title("9 - Team Comparison Tool")
+    st.title("10 - Team Comparison Tool")
     st.write("Create a teams profile per position based on the mean values of the players.")
     st.info(
     """
@@ -1390,7 +1625,7 @@ elif page == "Team Comparison Tool":
 
 elif page == "Player Progression in a Team":
     st.write("""---""")
-    st.title("10 - Player Progression in a Team")
+    st.title("11 - Player Progression in a Team")
     st.write("Review and analyze a player’s trajectory in the same team.")
     st.info(
     """
@@ -1501,15 +1736,13 @@ elif page == "Player Progression in a Team":
     ax_bar = fig.add_subplot(gs[0, 1])
     y = np.arange(len(metrics))
 
-    #width = 0.175 
-
     num_seasons = len(season_labels) 
     width = (6 - num_seasons)/11
 
     for i in range(num_seasons):
         offset = (width * (num_seasons-1) / 2) - (i * width)
         ax_bar.barh(y + offset, plot_df.iloc[i][metrics], width, 
-                    label=season_labels[i], color=season_colors[i], alpha=1 if i < num_seasons-1 else 1.0, edgecolor='black')    # The outline color
+                    label=season_labels[i], color=season_colors[i], alpha=1 if i < num_seasons-1 else 1.0, edgecolor='black')  #The outline color
 
     ax_bar.set_yticks(y)
     ax_bar.invert_yaxis()
@@ -1556,7 +1789,7 @@ elif page == "Player Progression in a Team":
     
 elif page == "Player Search Hub":
     st.write("""---""")
-    st.title("11 - Player Search Hub ")
+    st.title("12 - Player Search Hub ")
     st.write("Find players that match your performance requirements.")
     st.info(
     """
@@ -1660,7 +1893,7 @@ elif page == "Player Search Hub":
 
 elif page == "Team Recruitment Identifier":
     st.write("""---""")
-    st.title("12 - Team Recruitment Identifier Hub ")
+    st.title("13 - Team Recruitment Identifier Hub ")
     st.write("Find players that fit the teams needs.")
     st.info(
     """
