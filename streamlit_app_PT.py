@@ -38,7 +38,7 @@ with st.sidebar:
 
     page = st.sidebar.radio("Pages:", ["Instructions & Abbreviations","Player Stats - Player Overview","Player Stats - Team Overview","Two Player Comparison Tool","Three Player Comparison Tool",
                                        "Lineup Builder","Scatter Plot","Interactive Plot","Player Report Card","Player Similarity Tool","Team Comparison Tool",
-                                       "Player Progression in a Team","Player Search Hub","Team Recruitment Identifier"],
+                                       "Player Progression in a Team","Player Search Hub","Team Recruitment Identifier","Squad Builder Report"],
                                     label_visibility="collapsed")
 
 
@@ -73,7 +73,7 @@ def style_grade_column(val):
 grade_order = ['S', 'A', 'B', 'C', 'D', 'E', 'F']
 
 st.sidebar.divider()
-st.sidebar.write("𝐯𝟏.𝟎.𝟏𝟏")
+st.sidebar.write("𝐯𝟏.𝟎.𝟏𝟐")
 st.sidebar.write("Data Last Updated: Abr 21, 2026")
 
 if page == "Instructions & Abbreviations":
@@ -94,7 +94,8 @@ if page == "Instructions & Abbreviations":
     - **Team Comparison Tool:** Create a teams profile per position based on the mean values of the players.
     - **Player Progression in a Team:** Review and analyze a player’s trajectory in the same team.
     - **Player Search Hub:** Find players that match your performance requirements.
-    - **Team Recruitment Identifier:** Find players that fit the teams needs.""")
+    - **Team Recruitment Identifier:** Find players that fit the teams needs.
+    - **Squad Builder Report:** Build your Team's squad for next season.""")
     st.write("""---""")
     st.info("Position Abreviations:", icon="ℹ️")
     st.write("""            
@@ -665,10 +666,13 @@ elif page == "Three Player Comparison Tool":
     col4, col5, col6 = st.columns(3)
 
     with col4:
+        list1 = sorted(df3_TF['Player'].unique())
         p1 = st.selectbox("Select Player 1", sorted(df3_TF['Player'].unique()), key="p1")
     with col5:
+        list2 = [p for p in sorted(df4_TF['Player'].unique()) if p != p1]
         p2 = st.selectbox("Select Player 2", sorted(df4_TF['Player'].unique()), key="p2")
     with col6:
+        list3 = [p for p in sorted(df5_TF['Player'].unique()) if p not in [p1, p2]]
         p3 = st.selectbox("Select Player 3", sorted(df5_TF['Player'].unique()), key="p3")
 
     categories = ['Goal-Scoring', 'Attack', 'Dribbling', 'Possession', 'Defense', 'Physical']
@@ -1402,27 +1406,7 @@ elif page == "Player Similarity Tool":
 
     sim_features = ['Goal-Scoring','Attack', 'Dribbling', 'Defense', 'Possession', 'Physical']
 
-    st.write("""---""")
-    st.subheader("🛠️ Similar Profiles Settings")
-
-    min_age = int(df_supp_pos['Age'].min())
-    max_age = int(df_supp_pos['Age'].max())
-    
-    if min_age < max_age:
-        age_range = st.slider(
-            "Age Range:",
-            min_value=min_age,
-            max_value=max_age,
-            value=(min_age, max_age)
-    )
-    else:
-        age_range = (min_age, min_age)
-
-    df_supp_pos = df_supp_pos[(df_supp_pos['Age'] >= age_range[0]) & (df_supp_pos['Age'] <= age_range[1])]
-
-    st.subheader("⤵️ Search Button")
-
-    def find_similar_players(df_supp_pos, target_player, target_season, top_n=10):
+    def find_similar_players(df_supp_pos, target_player, target_season):
         df_sim = df_supp_pos.dropna(subset=sim_features).copy()
         
         scaler = StandardScaler()
@@ -1446,24 +1430,60 @@ elif page == "Player Similarity Tool":
         df_sim['Similarity_Score'] = similarity_matrix.flatten()
         results = df_sim.drop(index=player_idx)
         
-        results = results[(results['Age'] >= age_range[0]) & (results['Age'] <= age_range[1])]
+        #results = results[(results['Age'] >= age_range[0]) & (results['Age'] <= age_range[1])]
         results = results[(results['Similarity_Score'] > 0)]
         results = results.sort_values(by='Similarity_Score', ascending=False)
         
-        return results.head(top_n)
+        return results
+
+    st.write("""---""")
+    st.subheader("🛠️ Similar Profiles Settings")
+
+    min_age = int(df_supp_pos['Age'].min())
+    max_age = int(df_supp_pos['Age'].max())
+    
+    if min_age < max_age:
+        age_range = st.slider(
+            "Age Range:",
+            min_value=min_age,
+            max_value=max_age,
+            value=(min_age, max_age)
+    )
+    else:
+        age_range = (min_age, min_age)
+
+    col_sim1, col_sim2 = st.columns(2)
+
+    with col_sim1:
+        sim_seasons = ["All"] + sorted(df_supp_pos['Season'].unique().tolist())
+        sim_season_filter = st.multiselect("Search in Season:", 
+                                         options=sim_seasons,
+                                         default=sim_seasons)
+
+    with col_sim2:
+        sim_leagues = ["All"] + sorted(df['League'].unique().tolist())
+        sim_leagues_filter = st.multiselect("League Filter:",
+                                options=sim_leagues,
+                                default=sim_leagues)
+
+    st.subheader("⤵️ Search Button")
 
     if st.button("🔍 Find Similar Profiles"):
-        with st.spinner(f'Analyzing {selected_player}\'s DNA in the {Season_filter} season...'):
+        with st.spinner(f'Analyzing {selected_player}\'s Profile in the {Season_filter} season...'):
             
             similar_df = find_similar_players(df_supp_pos, selected_player, Season_filter)
-            
+            similar_df = similar_df[(similar_df['Age'] >= age_range[0]) & (similar_df['Age'] <= age_range[1])]
+            similar_df = similar_df[similar_df["Season"].isin(sim_season_filter)]
+            similar_df = similar_df[similar_df["League"].isin(sim_leagues_filter)]
+
             if similar_df is not None:
                 st.write(f"### Top 10 Similar Profiles to {selected_player} ({Season_filter}):")
                 
                 display_cols = ['Season', 'League', 'Team', 'Player', 'Age', 'Position', 'Similarity_Score']
                 display_df = similar_df[display_cols].copy()
                 display_df['Similarity Accuracy'] = (display_df['Similarity_Score'] * 100).map('{:,.1f}%'.format)
-                
+                display_df = display_df.head(10)
+
                 st.dataframe(
                     display_df[['Season', 'League', 'Team', 'Player', 'Age', 'Position', 'Similarity Accuracy']], 
                     hide_index=True,
@@ -1905,8 +1925,9 @@ elif page == "Team Recruitment Identifier":
     season_filter = st.selectbox("Filter by the Season that the Team played in:",
                                 df['Season'].unique())
 
+    df_clean = df
     df = df[df['Season'] == season_filter]
-    df_clean = df[df['Season'] == season_filter] 
+    #df_clean = df[df['Season'] == season_filter] 
 
     league_filter = st.selectbox("Filter by a League that the Team played in:",
                                 df['League'].unique())
@@ -1980,6 +2001,14 @@ elif page == "Team Recruitment Identifier":
     st.header("🎯 Required Positional Profiles")
     st.info("The following players are ranked by their ability to solve all identified weaknesses for each position simultaneously.")
 
+    Seasons = df_clean['Season'].unique().tolist()
+    SeasonsReplacementFilter = st.multiselect("Season Filter:",
+                                options=Seasons,
+                                default=season_filter)
+
+    if SeasonsReplacementFilter:
+        df_clean = df_clean[df_clean["Season"].isin(SeasonsReplacementFilter)]
+
     Leagues = df_clean['League'].unique().tolist()
     LeaguesReplacementFilter = st.multiselect("League Filter:",
                                 options=Leagues,
@@ -2040,7 +2069,7 @@ elif page == "Team Recruitment Identifier":
 
                             st.write(f"Showing the best players to improve **{', '.join(needs)}** for the {pos} position:")
                             
-                            display_cols = ['Player', 'Team', 'Age'] + needs + ['Grade', 'Solution Score']
+                            display_cols = ['Season','Player', 'Team', 'Age'] + needs + ['Grade', 'Solution Score']
                             
                             styled_recommendations = (recommendations[display_cols].style
                                 .format(lambda x: "NA" if x == 0 else (f"{x:.2f}" if isinstance(x, (int, float)) else x)))
@@ -2095,7 +2124,7 @@ elif page == "Team Recruitment Identifier":
 
                         st.write(f"These players are statistically superior to your **{pos}** baseline in all {len(compare_metrics)} categories:")
 
-                        display_cols = ['Player', 'Team', 'Age'] + compare_metrics + ['Value Added']
+                        display_cols = ['Season','Player', 'Team', 'Age'] + compare_metrics + ['Value Added']
                         
                         st.dataframe(
                             elite_targets[display_cols].style.format(precision=2),
@@ -2137,13 +2166,14 @@ elif page == "Team Recruitment Identifier":
                 
                 if not upgrade_targets.empty:
 
-                    upgrade_targets = upgrade_targets.sort_values(by='Avg Value Added', ascending=False).head(10)
+                    #upgrade_targets = upgrade_targets.sort_values(by='Avg Value Added', ascending=False).head(10)
+                    upgrade_targets = upgrade_targets.sort_values(by='Avg Value Added', ascending=False)
 
                     with st.expander(f"**POSITIONAL UPGRADES: {pos}** ({len(potential_upgrades)} targets found)"):
                         
                         st.write(f"Showing players who are, on average, better than your current {pos} group:")
                         
-                        display_cols = ['Player', 'Team', 'Age'] + compare_metrics + ['Avg Value Added']
+                        display_cols = ['Season','Player', 'Team', 'Age'] + compare_metrics + ['Avg Value Added']
                         
                         st.dataframe(
                             upgrade_targets[display_cols].style.format(precision=2),
@@ -2160,3 +2190,313 @@ elif page == "Team Recruitment Identifier":
                         )
                 else:
                     st.info(f"No targets found who are, on average, better than the current {pos} squad.")
+
+elif page == "Squad Builder Report":
+    st.write("""---""")
+    st.title("14 - Squad Builder Report for 2026/27 Season")
+    st.write("Build your Team's squad for next season.")
+    st.info(
+    """
+    Liga Portugal  -  Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
+    """, icon="ℹ️")
+
+    ordered_positions = ["GK", "CB", "FB & WB", "MF", "AM & W", "CF"]
+    positions_map = {
+    "GK": "Goalkeepers",
+    "CB": "Center-Backs",
+    "FB & WB": "Full-Backs & Wing-Backs",
+    "MF": "Midfielders",
+    "AM & W": "Attacking Mids & Wingers",
+    "CF": "Center-Forwards"
+    }
+    outfield_cats = ['Goal-Scoring', 'Attack', 'Dribbling', 'Possession', 'Defense', 'Physical']
+    colors = {'Goal-Scoring': 'orange', 'Attack': 'red', 'Dribbling': 'violet', 
+            'Possession': 'blue', 'Defense': 'green', 'Physical': 'gray'}
+
+    st.subheader("🏢 Selected Club to Manage")
+
+    df_26 = df[df['Season'] == '2025/26'].copy()
+    df_26['Player'] = df_26.apply(lambda x: f"{x['Player']} ({x['Age']} - {x['Position']})", axis=1)
+
+    col_l, col_r = st.columns(2)
+
+    with col_l:
+        league_filter = st.selectbox(
+            "Baseline League:",
+            options=sorted(df_26['League'].unique()),
+            help="Filter the list of teams to set your baseline.")
+
+    available_teams = df_26[df_26['League'] == league_filter]['Team'].unique()
+
+    with col_r:
+        base_team = st.selectbox(
+            "Select Base Team (Baseline):", 
+            options=sorted(available_teams))
+
+    if 'active_squad' not in st.session_state or st.session_state.get('last_team') != base_team:
+        initial_data = df_26[df_26['Team'] == base_team].copy()
+        st.session_state.active_squad = initial_data.to_dict('records')
+        st.session_state.last_team = base_team
+        
+        baseline_avgs = {}
+        for pos in ordered_positions:
+            pos_df = initial_data[initial_data['Position'] == pos]
+            if not pos_df.empty:
+                if pos == "GK":
+                    baseline_avgs[pos] = pos_df['Goalkeeping'].mean()
+                else:
+                    baseline_avgs[pos] = pos_df[outfield_cats].mean()
+        st.session_state.baseline = baseline_avgs
+
+    st.header("🔍 Scouting Network")
+    current_names = [p['Player'] for p in st.session_state.active_squad]
+    all_players_pool = df_26[~df_26['Player'].isin(current_names)]
+
+    target_league = st.selectbox(
+        "Search League:", 
+        options=[""] + sorted(all_players_pool['League'].unique().tolist()),
+        key="sb_league"
+    )
+
+    team_options = [""]
+    if target_league != "":
+        all_players_pool2 = all_players_pool[all_players_pool['League'] == target_league]
+        team_options = sorted(all_players_pool2['Team'].unique().tolist())
+
+    target_team = st.selectbox(
+        "Search Team:", 
+        options=[""] + team_options,
+        key="sb_team"
+    )
+
+    player_options = [""]
+    if target_team != "":
+        all_players_pool3 = all_players_pool[all_players_pool['Team'] == target_team]
+        player_options = sorted(all_players_pool3['Player'].unique().tolist())
+
+    target_player = st.selectbox(
+        "Search Player:", 
+        options=[""] + player_options,
+        key="sb_player"
+    )
+
+    if st.button("➕ Sign Player") and target_player != "":
+        new_data = df_26[df_26['Player'] == target_player].to_dict('records')[0]
+        st.session_state.active_squad.append(new_data)
+        st.rerun()
+
+    st.divider()
+    col_roster, col_analysis = st.columns([2, 1])
+    squad_df = pd.DataFrame(st.session_state.active_squad)
+
+    with col_roster:
+        with st.expander("➕ Add Custom Player (Not in Database)"):
+            with st.form("custom_player_form"):
+                c1, c2, c3 = st.columns(3)
+                new_name = c1.text_input("Player Name")
+                new_team = c2.text_input("Team Name")
+                new_age = c3.number_input("Player Age", step=1)
+
+                new_pos = st.selectbox("Position", ["GK", "CB", "FB & WB", "MF", "AM & W", "CF"])
+                                
+                submit_custom = st.form_submit_button("Add to Roster")
+                
+                final_name = f"{new_name} ({new_age} - {new_pos})"
+
+                if submit_custom:
+                    if new_name and new_team:
+                        new_player = {
+                            'Player': final_name,
+                            'Team': new_team,
+                            'Position': new_pos,
+                            'Age': new_age
+                        }
+                        
+                        for cat in outfield_cats:
+                            if cat not in new_player: new_player[cat] = 0
+                        if 'Goalkeeping' not in new_player: new_player['Goalkeeping'] = 0
+
+                        st.session_state.active_squad.append(new_player)
+                        st.success(f"Added {new_name} to {new_pos} roster!")
+                        st.rerun()
+                    else:
+                        st.error("Please provide both a Name and a Team.")
+
+        base_grey = "#f5f5f5"
+        signing_green = "#87ff91"
+        card_text_color = "#000000"
+
+        for pos_label in ordered_positions:
+            pos_squad = squad_df[squad_df['Position'] == pos_label]
+            
+            if not pos_squad.empty:
+                full_name = positions_map.get(pos_label, pos_label)
+                st.markdown(f"### {full_name}")
+
+                with st.container(border=True):
+                    for _, player in pos_squad.iterrows():
+                        is_original = player['Team'] == base_team
+                        current_bg = base_grey if is_original else signing_green
+                        border_color = "#cccccc" if is_original else "#2eb840"              
+                        
+                        st.markdown(f"""
+                            <div style="
+                                background-color: {current_bg}; 
+                                padding: 10px; 
+                                border-radius: 8px; 
+                                border: 1px solid {border_color};
+                                color: {card_text_color};
+                                margin-bottom: 10px;
+                                box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+                            ">
+                        """, unsafe_allow_html=True)
+
+                        with st.container(border=True):
+                            c1, c_grade, c2 = st.columns([3.5, 1.5, 1])
+                            
+                            c1.markdown(f"**{player['Player']}** | {player['Team']}")
+                            
+                            if pos_label == "GK":
+                                c1.markdown(f":green[**GK: {player['Goalkeeping']:.0f}**]")
+                            else:
+                                stat_line = " • ".join([f":{colors[cat]}[{cat[:2].upper()}:{player[cat]:.0f}]" for cat in outfield_cats])
+                                c1.markdown(stat_line)
+
+                            c_grade.markdown(f"""
+                                <div style="
+                                    background-color: white;
+                                    border: 2px solid {border_color};
+                                    border-radius: 6px;
+                                    padding: 5px;
+                                    text-align: center;
+                                    line-height: 1.2;
+                                ">
+                                    <small style="color: gray; font-weight: bold; text-transform: uppercase;">Grade</small><br>
+                                    <span style="font-size: 20px; font-weight: 800; color: #333;">{player['Grade']}</span>
+                                </div>
+                            """, unsafe_allow_html=True)
+
+                            idx = next(i for i, p in enumerate(st.session_state.active_squad) if p['Player'] == player['Player'])
+                            if c2.button("❌", key=f"rem_{player['Player']}_{pos_label}_{idx}"):
+                                st.session_state.active_squad.pop(idx)
+                                st.rerun()
+
+                        st.markdown("</div>", unsafe_allow_html=True)
+
+    with col_analysis:
+        st.subheader("📈 Comparison vs Baseline")
+        st.caption(f"Comparing current squad to original **{base_team}**")
+
+        for pos_label in ordered_positions:
+            current_pos_df = squad_df[squad_df['Position'] == pos_label]
+            full_pos_name = positions_map.get(pos_label, pos_label)
+            
+            with st.expander(f"{full_pos_name} Analysis", expanded=True):
+                if not current_pos_df.empty:
+                    base = st.session_state.baseline.get(pos_label)
+                    
+                    g1, g2 = st.columns(2)
+                    
+                    cur_count = len(current_pos_df)
+                    base_count = st.session_state.get('baseline_counts', {}).get(pos_label, cur_count) 
+                    count_diff = cur_count - base_count
+                    g1.metric("Number of Players", f"{cur_count}")
+
+                    cur_age = current_pos_df['Age'].mean()
+                    g2.metric("Avg Age", f"{cur_age:.1f}")
+
+                    st.divider()
+
+                    if pos_label == "GK":
+                        cur_val = current_pos_df['Goalkeeping'].mean()
+                        base_val = base if isinstance(base, float) else (base['Goalkeeping'] if base is not None else cur_val)
+                        diff = cur_val - base_val
+                        symbol = "▲" if diff > 0 else "▼" if diff < 0 else "—"
+                        
+                        st.metric("Goalkeeping", f"{cur_val:.1f}", delta=f"{diff:.1f} {symbol}")
+                    
+                    else:
+                        cur_means = current_pos_df[outfield_cats].mean()
+                        m_col1, m_col2 = st.columns(2)
+                        
+                        for i, cat in enumerate(outfield_cats):
+                            cur_val = cur_means[cat]
+                            base_val = base[cat] if (base is not None and cat in base) else cur_val
+                            diff = cur_val - base_val
+                            symbol = "▲" if diff > 0 else "▼" if diff < 0 else "—"
+                            
+                            target_col = m_col1 if i % 2 == 0 else m_col2
+                            target_col.metric(
+                                label=cat, 
+                                value=f"{cur_val:.1f}", 
+                                delta=f"{diff:.1f} {symbol}"
+                            )
+                        
+                        if base is None:
+                            st.caption("⚠️ No baseline technical data for this position.")
+                else:
+                    st.caption("Position vacant.")
+
+    st.divider()
+    st.subheader("🏁 Finalize Squad Report")
+
+    if st.button("🖼️ Generate Image Report"):
+     if not squad_df.empty:
+        num_players = len(squad_df)
+        num_groups = squad_df['Position'].nunique()
+        fig_height = (num_players * 0.4) + (num_groups * 0.8)
+        
+        fig, ax = plt.subplots(figsize=(12, fig_height), facecolor='white')
+        ax.set_facecolor('white')
+        plt.xlim(0, 100)
+        plt.ylim(0, 100)
+        plt.axis('off')
+
+        ax.text(5, 98, f"SQUAD BUILDING REPORT: {base_team}", fontsize=16, fontweight='bold', color='#1a7953')
+        ax.text(5, 95.5, "Preparing the 2026/27 Season | Squad Composition", fontsize=9, color='gray')
+        ax.axhline(94, color='black', linewidth=1.2, xmin=0.05, xmax=0.95)
+        ax.text(95, 95.5, "@TheStatsWay", horizontalalignment='right', size=9, color="#000000", fontweight='bold')
+
+        header_y = 91.5
+        ax.text(5, header_y, "AGE - PLAYER", fontsize=9, fontweight='bold', color='#333333')
+        ax.text(43.5, header_y, "PREVIOUS CLUB", fontsize=9, fontweight='bold', color='#333333')
+        ax.text(60, header_y, "GRADE", fontsize=9, fontweight='bold', color='#333333')
+        ax.text(70, header_y, "METRICS", fontsize=9, fontweight='bold', color='#333333')
+
+        y_pos = 89.5
+        for pos_label in ordered_positions:
+            pos_squad = squad_df[squad_df['Position'] == pos_label]
+            
+            if not pos_squad.empty:
+                rect = plt.Rectangle((4, y_pos-1), 92, 2.2, color='#f0f2f6', zorder=0)
+                ax.add_patch(rect)
+                ax.text(5, y_pos, f"{pos_label}", fontsize=10, fontweight='bold', color='black', va='center')
+                y_pos -= 3.5
+
+                for _, player in pos_squad.iterrows():
+                    ax.text(10, y_pos, f"{player['Player']}", fontsize=9, fontweight='bold')
+                    ax.text(5, y_pos, f"({player['Age']}y)", fontsize=8, color='gray')
+
+                    ax.text(44, y_pos, f"{player['Team']}", fontsize=8)
+                    ax.text(62, y_pos, f"{player['Grade']}", fontsize=8)
+
+                    if pos_label == "GK":
+                        ax.text(70, y_pos, f"Goalkeeping: {player['Goalkeeping']:.0f}", color='#333333', fontsize=7.5)
+                    else:
+                        metrics_str = " | ".join([f"{cat[:2]}:{player[cat]:.0f}" for cat in outfield_cats])
+                        ax.text(70, y_pos, metrics_str, fontsize=7.5, color='#444444')
+
+                    y_pos -= 3.5 
+                    ax.axhline(y_pos+2.2, color='#eeeeee', linewidth=0.5, xmin=0.05, xmax=0.95)
+
+        plt.tight_layout()
+        st.pyplot(fig)
+        
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", bbox_inches='tight', dpi=200)
+        st.download_button(
+            label="💾 Download PNG Report",
+            data=buf.getvalue(),
+            file_name=f"{base_team}_squad_report.png",
+            mime="image/png"
+        )
