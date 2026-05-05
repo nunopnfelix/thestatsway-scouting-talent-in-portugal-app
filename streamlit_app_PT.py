@@ -2065,7 +2065,8 @@ elif page == "Team Recruitment Identifier":
                         if not potential_signings.empty:
                             potential_signings['Solution Score'] = potential_signings[needs].mean(axis=1)
 
-                            recommendations = potential_signings.sort_values(by='Solution Score', ascending=False).head(10)
+                            #recommendations = potential_signings.sort_values(by='Solution Score', ascending=False).head(10)
+                            recommendations = potential_signings.sort_values(by='Solution Score', ascending=False)
 
                             st.write(f"Showing the best players to improve **{', '.join(needs)}** for the {pos} position:")
                             
@@ -2120,8 +2121,8 @@ elif page == "Team Recruitment Identifier":
                     with st.expander(f"**STAR UPGRADES: {pos}** ({len(elite_targets)} targets found)"):
                         
                         elite_targets['Value Added'] = (elite_targets[compare_metrics].mean(axis=1) - team_baseline.mean())
-                        elite_targets = elite_targets.sort_values(by='Value Added', ascending=False).head(10)
-
+                        #elite_targets = elite_targets.sort_values(by='Value Added', ascending=False).head(10)
+                        elite_targets = elite_targets.sort_values(by='Value Added', ascending=False)
                         st.write(f"These players are statistically superior to your **{pos}** baseline in all {len(compare_metrics)} categories:")
 
                         display_cols = ['Season','Player', 'Team', 'Age'] + compare_metrics + ['Value Added']
