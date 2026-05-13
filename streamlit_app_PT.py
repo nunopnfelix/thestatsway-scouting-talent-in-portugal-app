@@ -74,7 +74,7 @@ grade_order = ['S', 'A', 'B', 'C', 'D', 'E', 'F']
 
 st.sidebar.divider()
 st.sidebar.write("𝐯𝟏.𝟎.𝟏𝟐")
-st.sidebar.write("Data Last Updated: Abr 21, 2026")
+st.sidebar.write("Data Last Updated: May 11, 2026")
 
 if page == "Instructions & Abbreviations":
     st.write("""---""")
