@@ -2684,7 +2684,7 @@ elif page == "Profile Clusters":
                 viz_df['Ward_Cluster'] = viz_df['Ward_Cluster'].map(rename_map)
 
             updated_profiles = sorted(viz_df['Ward_Cluster'].unique())
-            selected_profile = st.selectbox("🎯 Specific Profile Filter:", ["All Profiles"] + updated_profiles)
+            selected_profile = st.selectbox("Specific Profile Filter:", ["All Profiles"] + updated_profiles)
                 
             if selected_profile != "All Profiles":
                 viz_df = viz_df[viz_df['Ward_Cluster'] == selected_profile]
