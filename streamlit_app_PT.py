@@ -2710,8 +2710,6 @@ elif page == "Profile Clusters":
                 hover_data={
                     'Team': True, 
                     'Ward_Cluster': True,
-                    'Defense': True,
-                    'Attack': True,
                     'Player_Label': False 
                 })
         
