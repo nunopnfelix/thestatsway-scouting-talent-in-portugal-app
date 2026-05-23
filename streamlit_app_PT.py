@@ -14,6 +14,11 @@ import matplotlib.gridspec as gridspec
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics.pairwise import cosine_similarity
 import matplotlib.patheffects as path_effects
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.cluster import AgglomerativeClustering
 
 st.set_page_config(
     page_title="TheStatsWay",
@@ -37,8 +42,8 @@ with st.sidebar:
     st.info("💡 **Page Selection:**")
 
     page = st.sidebar.radio("Pages:", ["Instructions & Abbreviations","Player Stats - Player Overview","Player Stats - Team Overview","Two Player Comparison Tool","Three Player Comparison Tool",
-                                       "Lineup Builder","Scatter Plot","Interactive Plot","Player Report Card","Player Similarity Tool","Team Comparison Tool",
-                                       "Player Progression in a Team","Player Search Hub","Team Recruitment Identifier","Squad Builder Report"],
+                                       "Lineup Builder","Scatter Plot","Team Scatter Plot","Interactive Plot","Player Report Card","Player Similarity Tool","Team Comparison Tool",
+                                       "Player Progression in a Team","Player Search Hub","Team Recruitment Identifier","Squad Builder Report","Profile Clusters"],
                                     label_visibility="collapsed")
 
 
@@ -73,7 +78,7 @@ def style_grade_column(val):
 grade_order = ['S', 'A', 'B', 'C', 'D', 'E', 'F']
 
 st.sidebar.divider()
-st.sidebar.write("𝐯𝟏.𝟎.𝟏𝟐")
+st.sidebar.write("𝐯𝟏.𝟎.𝟏𝟑")
 st.sidebar.write("Data Last Updated: May 11, 2026")
 
 if page == "Instructions & Abbreviations":
@@ -1143,9 +1148,108 @@ elif page == "Scatter Plot":
             file_name=f"{Season_filter}_{League_filter}_{Position_filter}_{x_axis}_{y_axis}_Analysis.png",
             mime="image/png")
     
+elif page == "Team Scatter Plot":
+    st.write("""---""")
+    st.title("7 - Team Scatter Plot")
+    st.write("Create a plot with the desired combination of the variables for a team.")
+    st.info(
+    """
+    Liga Portugal  -  Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
+    """, icon="ℹ️")
+    st.subheader("🛠️ Player Settings")
+    
+    df = df[df.Position != "GK"]
+    df = df.drop(columns=['Goalkeeping'])
+
+    Season_filter = st.selectbox("Season:", 
+                                df['Season'].unique())
+    
+    df_SF = df[df['Season']== Season_filter]
+
+    League_filter = st.selectbox("League:", 
+                                df_SF['League'].unique())
+    
+    df_LF = df_SF[df_SF['League']== League_filter]
+
+    Team_filter = st.selectbox("Team:", 
+                                df_LF['Team'].unique())
+    
+    df_PF = df_LF[df_LF['Team']== Team_filter]
+
+    min_age = int(df_PF['Age'].min())
+    max_age = int(df_PF['Age'].max())
+    
+    if min_age < max_age:
+        age_range = st.slider(
+            "Age Range:",
+            min_value=min_age,
+            max_value=max_age,
+            value=(min_age, max_age)
+        )
+    else:
+        age_range = (min_age, min_age)
+
+    df_AF = df_PF[(df_PF['Age'] >= age_range[0]) & (df_PF['Age'] <= age_range[1])]
+
+    st.subheader("📊 Plot Settings")
+    st.info(
+    """
+    The color of the player plot reflects the color of their grade where :
+    Elite - S (Dark Green) to Very Poor - F (Red)
+    """, icon="ℹ️")
+    allowed_metrics = ["Goal-Scoring","Attack","Dribbling","Possession", "Defense","Physical","Age"]
+    variables = [m for m in allowed_metrics if m in df_AF.columns]
+    
+    x_axis = st.selectbox("X-Axis (Horizontal)", 
+                        variables, 
+                        index=0)
+
+    y_axis = st.selectbox("Y-Axis (Vertical)", 
+                                  variables, 
+                                  index=1)
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    fig.set_facecolor("#333333")
+    ax.set_facecolor("#f7f7f7")
+
+    for i, row in df_AF.iterrows():
+        ax.scatter(row[x_axis], row[y_axis], 
+                color= get_grade_color(row['Grade']), 
+                s=200, 
+                edgecolors='black', 
+                alpha=0.8)
+        
+        ax.text(row[x_axis], row[y_axis]-3, 
+                row['Player'], 
+                color='black', 
+                ha='center', fontsize=7)
+
+    ax.set_title(f"{Team_filter}s Report: {x_axis} & {y_axis}", color='white', fontsize=18, fontweight='bold', pad=30)
+    ax.set_xlabel(x_axis, color='white', fontsize=12,fontweight='bold')
+    ax.set_ylabel(y_axis, color='white', fontsize=12,fontweight='bold')
+    ax.tick_params(colors='white')
+    ax.grid(color='#333333', linestyle='--', alpha=0.5)
+
+    plt.figtext(0.5, 0.915, f"Season: {Season_filter} + League: {League_filter} + Age > {age_range[0]} + Age < {age_range[1]}", 
+                fontsize=11, color="#FFFFFF", ha='center', style='italic')
+    plt.figtext(0.9, 0.02, "@TheStatsWay", ha="right", 
+                fontsize=10, color='White', fontweight='bold')
+    plt.figtext(0.35, 0.01, "https://thestatsway-scouting-talent-in-portugal-app.streamlit.app/",ha="right", fontsize=6, color='White', fontweight='bold')
+    
+    st.pyplot(fig)
+
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=300, bbox_inches="tight")
+
+    st.download_button(
+            label="📥 Download Lineup Image",
+            data=buf.getvalue(),
+            file_name=f"{Season_filter}_{League_filter}_{Team_filter}_{x_axis}_{y_axis}_Analysis.png",
+            mime="image/png")
+    
 elif page == "Interactive Plot":
     st.write("""---""")
-    st.title("7 - Interactive Plot")
+    st.title("8 - Interactive Plot")
     st.write("Create an interactive plot with the desired combination of the variables.")
     st.info(
     """
@@ -1214,7 +1318,7 @@ elif page == "Interactive Plot":
 
 elif page == "Player Report Card":
     st.write("""---""")
-    st.title("8 - Player Report Card")
+    st.title("9 - Player Report Card")
     st.write("Create a player report card for the player you want.")
     st.info(
     """
@@ -1361,7 +1465,7 @@ elif page == "Player Report Card":
 
 elif page == "Player Similarity Tool":
     st.write("""---""")
-    st.title("9 - Player Similarity Tool")
+    st.title("10 - Player Similarity Tool")
     st.write("Find the players with the most similar data profile based on our metrics.")
     st.info(
     """
@@ -1559,7 +1663,7 @@ elif page == "Player Similarity Tool":
 
 elif page == "Team Comparison Tool":
     st.write("""---""")
-    st.title("10 - Team Comparison Tool")
+    st.title("11 - Team Comparison Tool")
     st.write("Create a teams profile per position based on the mean values of the players.")
     st.info(
     """
@@ -1645,7 +1749,7 @@ elif page == "Team Comparison Tool":
 
 elif page == "Player Progression in a Team":
     st.write("""---""")
-    st.title("11 - Player Progression in a Team")
+    st.title("12 - Player Progression in a Team")
     st.write("Review and analyze a player’s trajectory in the same team.")
     st.info(
     """
@@ -1809,7 +1913,7 @@ elif page == "Player Progression in a Team":
     
 elif page == "Player Search Hub":
     st.write("""---""")
-    st.title("12 - Player Search Hub ")
+    st.title("13 - Player Search Hub ")
     st.write("Find players that match your performance requirements.")
     st.info(
     """
@@ -1913,7 +2017,7 @@ elif page == "Player Search Hub":
 
 elif page == "Team Recruitment Identifier":
     st.write("""---""")
-    st.title("13 - Team Recruitment Identifier Hub ")
+    st.title("14 - Team Recruitment Identifier Hub ")
     st.write("Find players that fit the teams needs.")
     st.info(
     """
@@ -2065,8 +2169,7 @@ elif page == "Team Recruitment Identifier":
                         if not potential_signings.empty:
                             potential_signings['Solution Score'] = potential_signings[needs].mean(axis=1)
 
-                            #recommendations = potential_signings.sort_values(by='Solution Score', ascending=False).head(10)
-                            recommendations = potential_signings.sort_values(by='Solution Score', ascending=False)
+                            recommendations = potential_signings.sort_values(by='Solution Score', ascending=False).head(10)
 
                             st.write(f"Showing the best players to improve **{', '.join(needs)}** for the {pos} position:")
                             
@@ -2121,8 +2224,8 @@ elif page == "Team Recruitment Identifier":
                     with st.expander(f"**STAR UPGRADES: {pos}** ({len(elite_targets)} targets found)"):
                         
                         elite_targets['Value Added'] = (elite_targets[compare_metrics].mean(axis=1) - team_baseline.mean())
-                        #elite_targets = elite_targets.sort_values(by='Value Added', ascending=False).head(10)
-                        elite_targets = elite_targets.sort_values(by='Value Added', ascending=False)
+                        elite_targets = elite_targets.sort_values(by='Value Added', ascending=False).head(10)
+
                         st.write(f"These players are statistically superior to your **{pos}** baseline in all {len(compare_metrics)} categories:")
 
                         display_cols = ['Season','Player', 'Team', 'Age'] + compare_metrics + ['Value Added']
@@ -2194,7 +2297,7 @@ elif page == "Team Recruitment Identifier":
 
 elif page == "Squad Builder Report":
     st.write("""---""")
-    st.title("14 - Squad Builder Report for 2026/27 Season")
+    st.title("15 - Squad Builder Report for 2026/27 Season")
     st.write("Build your Team's squad for next season.")
     st.info(
     """
@@ -2501,3 +2604,133 @@ elif page == "Squad Builder Report":
             file_name=f"{base_team}_squad_report.png",
             mime="image/png"
         )
+
+elif page == "Profile Clusters":
+    st.write("""---""")
+    st.title("16 - Position Profile Clusters")
+    st.info(
+    """
+    Liga Portugal  -  Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23
+    """, icon="ℹ️")
+
+    st.set_page_config(layout="wide")
+    st.subheader("🛠️ Search Settings")
+
+    def apply_ward_clustering(dataframe, n_clusters=4):
+        metrics = ['Goal-Scoring', 'Attack', 'Dribbling', 'Possession', 'Defense', 'Physical']
+        df_c = dataframe.dropna(subset=metrics).copy()
+
+        if len(df_c) < n_clusters:
+            df_c['Ward_Cluster'] = "Insufficient Data"
+            return df_c
+                    
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(df_c[metrics])
+                    
+        ward_model = AgglomerativeClustering(n_clusters=n_clusters, linkage='ward')
+        df_c['Ward_Cluster'] = ward_model.fit_predict(X_scaled)
+        df_c['Ward_Cluster'] = df_c['Ward_Cluster'].apply(lambda x: f"Profile {x+1}")
+                    
+        return df_c
+
+    league_hierarchy = {
+    'Liga Portugal': 1, 
+    'Liga 2': 2, 
+    'Liga 3': 3, 
+    'Campeonato de Portugal': 4,
+    'Liga Revelação U23': 5}
+    
+    viz_pos = st.selectbox("Select Position:", ["CB", "FB & WB", "MF", "AM & W", "CF"])
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        season_list = sorted(df['Season'].dropna().unique().tolist(), reverse=True)
+        selected_season = st.selectbox("Filter by Season:", season_list)
+
+    df_season = df[df['Season'] == selected_season]
+
+    with col2:
+        raw_leagues = df_season['League'].dropna().unique().tolist()
+        league_list = sorted(raw_leagues, key=lambda x: league_hierarchy.get(x, 99))
+        selected_league = st.selectbox("Filter by League:", league_list)
+
+    df_league = df_season[df_season['League'] == selected_league]
+
+    viz_df = df_league[df_league['Position'] == viz_pos].copy()
+
+    if not viz_df.empty:
+        st.divider()
+                
+        n_profiles = st.slider("Number of Tactical Profiles to find:", min_value=2, max_value=8, value=4)
+                
+        viz_df = apply_ward_clustering(viz_df, n_clusters=n_profiles)
+
+        if "Ward_Cluster" in viz_df.columns and viz_df['Ward_Cluster'].iloc[0] != "Insufficient Data":
+                
+            orig_profiles = sorted(viz_df['Ward_Cluster'].unique())
+                
+            with st.expander("✏️ Rename Profiles (Optional)"):
+                st.caption("Give custom tactical names to the algorithmic clusters based on where they land on the map.")
+                    
+                rename_cols = st.columns(len(orig_profiles))
+                rename_map = {}
+                    
+                for i, p in enumerate(orig_profiles):
+                    with rename_cols[i]:
+                        custom_name = st.text_input(f"Rename {p}:", value=p, key=f"rename_{p}")
+                        rename_map[p] = custom_name
+                    
+                viz_df['Ward_Cluster'] = viz_df['Ward_Cluster'].map(rename_map)
+
+            updated_profiles = sorted(viz_df['Ward_Cluster'].unique())
+            selected_profile = st.selectbox("🎯 Specific Profile Filter:", ["All Profiles"] + updated_profiles)
+                
+            if selected_profile != "All Profiles":
+                viz_df = viz_df[viz_df['Ward_Cluster'] == selected_profile]
+
+            x_axis = 'Defense' 
+            y_axis = 'Attack' 
+                
+            viz_df['Player_Label'] = viz_df['Player'].apply(lambda x: f"<b>{x}</b>")
+                
+            title_str = f"Ward Clusters: {viz_pos}"
+            if selected_season != "All Seasons": title_str += f" | Season: {selected_season}"
+            if selected_league != "All Leagues": title_str += f" | League: {selected_league}"
+            if selected_profile != "All Profiles": title_str += f" | {selected_profile} Only"
+
+            fig = px.scatter(
+                viz_df, x=x_axis, y=y_axis, 
+                color='Ward_Cluster',         
+                text='Player_Label',      
+                hover_name='Player',      
+                title=title_str,
+                height=900,
+                category_orders={"Ward_Cluster": updated_profiles},
+                hover_data={
+                    'Team': True, 
+                    'Ward_Cluster': True,
+                    'Defense': True,
+                    'Attack': True,
+                    'Player_Label': False 
+                })
+        
+            fig.update_traces(
+                textposition='bottom center', 
+                textfont=dict(size=11),       
+                marker=dict(size=12, line=dict(width=1, color='DarkSlateGrey'))
+            )
+
+            fig.update_layout(
+                plot_bgcolor='#EAEAEA',  
+                xaxis_title=None,        
+                yaxis_title=None,        
+                xaxis=dict(showgrid=True, gridcolor='white', zeroline=False, showticklabels=True),
+                yaxis=dict(showgrid=True, gridcolor='white', zeroline=False, showticklabels=True),
+                legend_title_text="Tactical Profiles"
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+
+    else:
+        st.info("No players match this combination of filters. Try adjusting the Season, League, or Team.")
