@@ -1171,9 +1171,12 @@ elif page == "Team Scatter Plot":
     
     df_LF = df_SF[df_SF['League']== League_filter]
 
+    teams = df_LF['Team'].unique().tolist()
+    sorted_teams = sorted(teams)
+
     Team_filter = st.selectbox("Team:", 
-                                df_LF['Team'].unique())
-    
+                                options=sorted_teams)
+   
     df_PF = df_LF[df_LF['Team']== Team_filter]
 
     min_age = int(df_PF['Age'].min())
