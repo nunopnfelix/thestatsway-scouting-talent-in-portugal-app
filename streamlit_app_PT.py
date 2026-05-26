@@ -19,6 +19,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.cluster import AgglomerativeClustering
+from sklearn.decomposition import PCA
 
 st.set_page_config(
     page_title="TheStatsWay",
@@ -2618,32 +2619,55 @@ elif page == "Profile Clusters":
 
     st.set_page_config(layout="wide")
     st.subheader("🛠️ Search Settings")
-
+    
     def apply_ward_clustering(dataframe, n_clusters=4):
-        metrics = ['Goal-Scoring', 'Attack', 'Dribbling', 'Possession', 'Defense', 'Physical']
+
+        default_metrics = ["Goal-Scoring", "Attack", "Dribbling", "Possession", "Defense", "Physical"]
+        include_age = st.checkbox("Include ***Age*** metric in the Clustering?", value=False)
+        current_metrics = default_metrics.copy()
+
+        if include_age:
+                current_metrics.append("Age")
+
+        metrics = current_metrics
         df_c = dataframe.dropna(subset=metrics).copy()
 
         if len(df_c) < n_clusters:
             df_c['Ward_Cluster'] = "Insufficient Data"
             return df_c
-                    
+                        
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(df_c[metrics])
-                    
+                        
         ward_model = AgglomerativeClustering(n_clusters=n_clusters, linkage='ward')
         df_c['Ward_Cluster'] = ward_model.fit_predict(X_scaled)
         df_c['Ward_Cluster'] = df_c['Ward_Cluster'].apply(lambda x: f"Profile {x+1}")
-                    
+
+        pca = PCA(n_components=2)
+        pca_components = pca.fit_transform(X_scaled)
+        df_c['PC1'] = pca_components[:, 0]
+        df_c['PC2'] = pca_components[:, 1]
+
+        loadings = pd.DataFrame(
+            pca.components_.T, 
+            columns=['PC1', 'PC2'], 
+            index=metrics)
+
+        with st.expander("🔍 What does the X and Y axis mean?"):
+            st.write("Since we used PCAs, the axis are mathematical blends of all the metrics. Here is how much each stat contributed to the axis orientation:")
+            st.dataframe(loadings.style.background_gradient(cmap='coolwarm'))     
         return df_c
 
     league_hierarchy = {
-    'Liga Portugal': 1, 
-    'Liga 2': 2, 
-    'Liga 3': 3, 
-    'Campeonato de Portugal': 4,
-    'Liga Revelação U23': 5}
-    
-    viz_pos = st.selectbox("Select Position:", ["CB", "FB & WB", "MF", "AM & W", "CF"])
+        'Liga Portugal': 1, 
+        'Liga 2': 2, 
+        'Liga 3': 3, 
+        'Campeonato de Portugal': 4,
+        'Liga Revelação U23': 5
+    }
+
+    viz_pos = st.selectbox("Select Position:", 
+                           ["CB", "FB & WB", "MF", "AM & W", "CF"])
 
     col1, col2 = st.columns(2)
 
@@ -2664,39 +2688,42 @@ elif page == "Profile Clusters":
 
     if not viz_df.empty:
         st.divider()
-                
-        n_profiles = st.slider("Number of Tactical Profiles to find:", min_value=2, max_value=8, value=4)
-                
+                    
+        n_profiles = st.slider("Number of Tactical Profiles to find:", 
+                               min_value=2, 
+                               max_value=9, 
+                               value=4)
+                    
         viz_df = apply_ward_clustering(viz_df, n_clusters=n_profiles)
 
         if "Ward_Cluster" in viz_df.columns and viz_df['Ward_Cluster'].iloc[0] != "Insufficient Data":
-                
-            orig_profiles = sorted(viz_df['Ward_Cluster'].unique())
-                
-            with st.expander("✏️ Rename Profiles (Optional)"):
-                st.caption("Give custom tactical names to the algorithmic clusters based on where they land on the map.")
                     
+            orig_profiles = sorted(viz_df['Ward_Cluster'].unique())
+                    
+            with st.expander("🛠️ Rename Profiles Names"):
+                st.caption("Give custom tactical names to the algorithmic clusters based on where they land on the map. Check some profiles in the end to rename them!")
+                        
                 rename_cols = st.columns(len(orig_profiles))
                 rename_map = {}
-                    
+                        
                 for i, p in enumerate(orig_profiles):
                     with rename_cols[i]:
                         custom_name = st.text_input(f"Rename {p}:", value=p, key=f"rename_{p}")
                         rename_map[p] = custom_name
-                    
+                        
                 viz_df['Ward_Cluster'] = viz_df['Ward_Cluster'].map(rename_map)
 
             updated_profiles = sorted(viz_df['Ward_Cluster'].unique())
             selected_profile = st.selectbox("Specific Profile Filter:", ["All Profiles"] + updated_profiles)
-                
+                    
             if selected_profile != "All Profiles":
                 viz_df = viz_df[viz_df['Ward_Cluster'] == selected_profile]
 
-            x_axis = 'Defense' 
-            y_axis = 'Attack' 
-                
+            x_axis = 'PC1'
+            y_axis = 'PC2'
+                    
             viz_df['Player_Label'] = viz_df['Player'].apply(lambda x: f"<b>{x}</b>")
-                
+                    
             title_str = f"Ward Clusters: {viz_pos}"
             if selected_season != "All Seasons": title_str += f" | Season: {selected_season}"
             if selected_league != "All Leagues": title_str += f" | League: {selected_league}"
@@ -2709,13 +2736,17 @@ elif page == "Profile Clusters":
                 hover_name='Player',      
                 title=title_str,
                 height=900,
-                category_orders={"Ward_Cluster": updated_profiles},
+                category_orders={"Ward_Cluster": updated_profiles}, # Legend sorted correctly
                 hover_data={
                     'Team': True, 
+                    'Age': True, 
                     'Ward_Cluster': True,
+                    'Attack': False, 
+                    'Defense': False, 
                     'Player_Label': False 
-                })
-        
+                }
+            )
+            
             fig.update_traces(
                 textposition='bottom center', 
                 textfont=dict(size=11),       
@@ -2724,14 +2755,32 @@ elif page == "Profile Clusters":
 
             fig.update_layout(
                 plot_bgcolor='#EAEAEA',  
-                xaxis_title=None,        
-                yaxis_title=None,        
-                xaxis=dict(showgrid=True, gridcolor='white', zeroline=False, showticklabels=True),
-                yaxis=dict(showgrid=True, gridcolor='white', zeroline=False, showticklabels=True),
+                xaxis_title="PC1",        
+                yaxis_title="PC2",        
+                xaxis=dict(showgrid=True, gridcolor='white', zeroline=False, showticklabels=False),
+                yaxis=dict(showgrid=True, gridcolor='white', zeroline=False, showticklabels=False),
                 legend_title_text="Tactical Profiles"
             )
             
-            st.plotly_chart(fig, use_container_width=True)
+            chart_config = {
+                'displayModeBar': True,
+                'toImageButtonOptions': {
+                    'format': 'png',
+                    'filename': f'PCA_Cluster_Map_{viz_pos}_{selected_season}',
+                    'height': 900,
+                    'width': 1600,
+                }
+            }
+                
+            st.plotly_chart(fig, use_container_width=True, config=chart_config)
+
+            with st.expander("🔍 Some of the Profiles to use in the renaming section:"):
+                st.write("""                        
+    - **CB :** Defensive CB, Ball-Playing CB, Wide Progressor CB, Physical Monster CB, Libero.
+    - **FB & WB :** Defensive FB, Attacking FB, Playmaker, False Winger, Locomotive FB.
+    - **MF :** Defensive MF, Ball Winner MF, Box-to-Box, Deep Lying Playmaker, Advanced Playmaker, Box Crasher.
+    - **AM & W :** Playmaker, Winger, Dribbling Monster, Inside Forward, Pressing Forward, Shadow Striker.
+    - **CF :** Poacher, Target Man, Pressing CF, False 9, Second Striker, Link-Up Foward.""")
 
     else:
         st.info("No players match this combination of filters. Try adjusting the Season, League, or Team.")
