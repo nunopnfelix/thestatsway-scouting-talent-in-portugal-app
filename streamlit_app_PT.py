@@ -20,7 +20,6 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.decomposition import PCA
-from lightgbm import LGBMRegressor
 
 st.set_page_config(
     page_title="TheStatsWay",
@@ -102,7 +101,8 @@ if page == "Instructions & Abbreviations":
     - **Player Progression in a Team:** Review and analyze a player’s trajectory in the same team.
     - **Player Search Hub:** Find players that match your performance requirements.
     - **Team Recruitment Identifier:** Find players that fit the teams needs.
-    - **Squad Builder Report:** Build your Team's squad for next season.""")
+    - **Squad Builder Report:** Build your Team's squad for next season.
+    - **Re-Sale Value Calculator:** Player Re-Sale Value Calculator""")
     st.write("""---""")
     st.info("Position Abreviations:", icon="ℹ️")
     st.write("""            
