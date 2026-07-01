@@ -7,3 +7,5 @@ mplsoccer
 matplotlib
 seaborn
 scikit-learn
+lightgbm 
+LGBMRegressor
