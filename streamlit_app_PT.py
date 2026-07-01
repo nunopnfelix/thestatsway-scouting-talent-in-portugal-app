@@ -20,6 +20,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.decomposition import PCA
+from lightgbm import LGBMRegressor
 
 st.set_page_config(
     page_title="TheStatsWay",
@@ -44,7 +45,8 @@ with st.sidebar:
 
     page = st.sidebar.radio("Pages:", ["Instructions & Abbreviations","Player Stats - Player Overview","Player Stats - Team Overview","Two Player Comparison Tool","Three Player Comparison Tool",
                                        "Lineup Builder","Scatter Plot","Team Scatter Plot","Interactive Plot","Player Report Card","Player Similarity Tool","Team Comparison Tool",
-                                       "Player Progression in a Team","Player Search Hub","Team Recruitment Identifier","Squad Builder Report","Profile Clusters","Re-Sale Value Calculator"],
+                                       "Player Progression in a Team","Player Search Hub","Team Recruitment Identifier","Squad Builder Report","Profile Clusters","Re-Sale Value Calculator",
+                                       "Ternary Graph","Team Global Analysis"],
                                     label_visibility="collapsed")
 
 
@@ -79,7 +81,7 @@ def style_grade_column(val):
 grade_order = ['S', 'A', 'B', 'C', 'D', 'E', 'F']
 
 st.sidebar.divider()
-st.sidebar.write("𝐯𝟏.𝟎.𝟏𝟒")
+st.sidebar.write("𝐯𝟏.𝟎.𝟏𝟓")
 st.sidebar.write("Data Last Updated: Jun 10, 2026")
 
 if page == "Instructions & Abbreviations":
@@ -102,7 +104,10 @@ if page == "Instructions & Abbreviations":
     - **Player Search Hub:** Find players that match your performance requirements.
     - **Team Recruitment Identifier:** Find players that fit the teams needs.
     - **Squad Builder Report:** Build your Team's squad for next season.
-    - **Re-Sale Value Calculator:** Player Re-Sale Value Calculator""")
+    - **Profile Clusters:** Group the players into clusters to help for profile analysis.
+    - **Re-Sale Value Calculator:** Calculate the player re-sale value based on our available metrics.
+    - **Ternary Graph:** Analyze compositional data in the three-dimensional tool.
+    - **Team Global Analysis:** This section aggregates individual player metrics to map out team-wide tactical identities and styles.""")
     st.write("""---""")
     st.info("Position Abreviations:", icon="ℹ️")
     st.write("""            
@@ -856,44 +861,56 @@ elif page == "Lineup Builder":
     """, icon="ℹ️")
     
     formations = {
-    "4-3-3": {
-        "GK": (11, 40),
-        "RCB": (30, 53),"LCB": (30, 27),"RB": (39, 70),"LB": (39, 10),
-        "RCM": (64, 60),"CM": (52, 40),"LCM": (64, 20),
-        "RW": (85, 67),"CF": (110, 40),"LW": (85, 13),
-    },
-    "4-4-2": {
-        "GK": (11, 40),
-        "RCB": (30, 53),"LCB": (30, 27),"RB": (39, 70),"LB": (39, 10),
-        "RCM": (60, 55),"LCM": (60, 25), "RM": (74, 67),"LM": (74, 13),
-        "RF": (110, 55), "LF": (110, 25)
-    },
-     "4-2-3-1": {
-        "GK": (11, 40),
-        "RCB": (30, 53),"LCB": (30, 27),"RB": (39, 70),"LB": (39, 10),
-        "RCM": (60, 55),"LCM": (60, 25),
-        "RW": (85, 67), "AM": (85, 40), "LW": (85, 13),
-        "CF": (110, 40)
-    },
-    "5-2-2-1": {
-        "GK": (11, 40),
-        "RCB": (33, 60), "CCB": (25,40), "LCB": (33, 20), "RWB": (48, 70), "LWB": (48, 10),
-        "RCM": (60, 55), "LCM": (60, 25),
-        "RW": (85, 67), "LW": (85, 13),
-        "CF": (110, 40)
-    },
-    "5-3-2": {
-        "GK": (11, 40),
-        "RCB": (33, 60), "CCB": (25,40), "LCB": (33, 20), "RWB": (48, 70), "LWB": (48, 10),
-        "RCM": (74, 60),"CM": (62, 40),"LCM": (74, 20),
-        "RF": (110, 55), "LF": (110, 25)
-    },
-     "4-3-3 (3 CF's)": {
-        "GK": (11, 40),
-        "RCB": (30, 53),"LCB": (30, 27),"RB": (39, 70),"LB": (39, 10),
-        "RCM": (64, 60),"CM": (52, 40),"LCM": (64, 20),
-        "RF": (95, 60),"CF": (110, 40),"LF": (95, 20),
-    }}
+        "4-3-3": {
+            "GK": (11, 40),
+            "RCB": (30, 53),"LCB": (30, 27),"RB": (39, 70),"LB": (39, 10),
+            "RCM": (64, 60),"CM": (52, 40),"LCM": (64, 20),
+            "RW": (85, 67),"CF": (110, 40),"LW": (85, 13),
+        },
+        "4-4-2": {
+            "GK": (11, 40),
+            "RCB": (30, 53),"LCB": (30, 27),"RB": (39, 70),"LB": (39, 10),
+            "RCM": (60, 55),"LCM": (60, 25), "RM": (74, 67),"LM": (74, 13),
+            "RF": (110, 55), "LF": (110, 25)
+        },
+         "4-2-3-1": {
+            "GK": (11, 40),
+            "RCB": (30, 53),"LCB": (30, 27),"RB": (39, 70),"LB": (39, 10),
+            "RCM": (60, 55),"LCM": (60, 25),
+            "RW": (85, 67), "AM": (85, 40), "LW": (85, 13),
+            "CF": (110, 40)
+        },
+        "5-2-2-1": {
+            "GK": (11, 40),
+            "RCB": (33, 60), "CCB": (25,40), "LCB": (33, 20), "RWB": (48, 70), "LWB": (48, 10),
+            "RCM": (60, 55), "LCM": (60, 25),
+            "RW": (85, 67), "LW": (85, 13),
+            "CF": (110, 40)
+        },
+        "5-3-2": {
+            "GK": (11, 40),
+            "RCB": (33, 60), "CCB": (25,40), "LCB": (33, 20), "RWB": (48, 70), "LWB": (48, 10),
+            "RCM": (74, 60),"CM": (62, 40),"LCM": (74, 20),
+            "RF": (110, 55), "LF": (110, 25)
+        },
+         "4-3-3 (3 CF's)": {
+            "GK": (11, 40),
+            "RCB": (30, 53),"LCB": (30, 27),"RB": (39, 70),"LB": (39, 10),
+            "RCM": (64, 60),"CM": (52, 40),"LCM": (64, 20),
+            "RF": (95, 60),"CF": (110, 40),"LF": (95, 20)
+        },
+        "5-3-2 (1 AM + 2 MF)": {
+            "GK": (11, 40),
+            "RCB": (33, 60), "CCB": (25,40), "LCB": (33, 20), "RWB": (48, 70), "LWB": (48, 10),
+            "RAM": (74, 60),"CM": (62, 40),"LCM": (74, 20),
+            "RF": (110, 55), "LF": (110, 25)
+        },
+        "5-2-3 (3 CF's)": {
+            "GK": (11, 40),
+            "RCB": (33, 60), "CCB": (25,40), "LCB": (33, 20), "RWB": (48, 70), "LWB": (48, 10),
+            "RCM": (60, 55), "LCM": (60, 25),
+            "RF": (95, 60),"CF": (110, 40),"LF": (95, 20)
+        }}
 
     PositionIndex = {
          "GK": "GK",
@@ -909,6 +926,8 @@ elif page == "Lineup Builder":
          "LCM": "MF",
          "LM": "AM & W",
          "RM": "AM & W",
+         "RAM": "AM & W",
+         "LAM": "AM & W",
          "AM": "AM & W",
          "LW": "AM & W",
          "RW": "AM & W",
@@ -926,11 +945,6 @@ elif page == "Lineup Builder":
         st.session_state.lineup = {}
         
     st.subheader("🛠️ Lineup Settings")
-
-    Season_filter = st.selectbox("Season:", 
-                                df['Season'].unique())
-    
-    df_SF = df[df['Season']== Season_filter]
 
     selected_formation = st.selectbox("Choose Formation", 
                                         options=list(formations.keys()), 
@@ -953,21 +967,35 @@ elif page == "Lineup Builder":
 
     for pos, coords in formations[selected_formation].items():
         broad_category = PositionIndex.get(pos)
-        pos_data = df_SF[df_SF['Position'] == broad_category]
         
-        col_league, col_team, col_player = st.columns(3)
+        pos_data = df[df['Position'] == broad_category]
+        
+        col_season, col_league, col_team, col_player = st.columns(4)
+
+        with col_season:
+            available_seasons = sorted(pos_data['Season'].unique().tolist(), reverse=True)
+            season_choice = st.selectbox(f"Season ({pos})", 
+                                         ["Select Season"] + available_seasons, 
+                                         key=f"s_{pos}")
 
         with col_league:
-            available_leagues = sorted(pos_data['League'].unique().tolist())
+            if season_choice != "Select Season":
+                season_filtered_data = pos_data[pos_data['Season'] == season_choice]
+                available_leagues = sorted(season_filtered_data['League'].unique().tolist())
+            else:
+                season_filtered_data = pd.DataFrame()
+                available_leagues = []
+                
             league_choice = st.selectbox(f"League ({pos})", 
-                                    ["Select League"] + available_leagues, 
-                                    key=f"l_{pos}")
+                                         ["Select League"] + available_leagues, 
+                                         key=f"l_{pos}")
         
         with col_team:
-            if league_choice != "Select League":
-                team_filtered_data = pos_data[pos_data['League'] == league_choice]
+            if league_choice != "Select League" and not season_filtered_data.empty:
+                team_filtered_data = season_filtered_data[season_filtered_data['League'] == league_choice]
                 available_teams = sorted(team_filtered_data['Team'].unique().tolist())
             else:
+                team_filtered_data = pd.DataFrame()
                 available_teams = []
 
             team_choice = st.selectbox(f"Team ({pos})", 
@@ -976,20 +1004,26 @@ elif page == "Lineup Builder":
 
         with col_player:
             available_players = []
-            if team_choice != "Select Team":
-                team_pos_players = pos_data[pos_data['Team'] == team_choice]['Player'].tolist()
+            if team_choice != "Select Team" and not team_filtered_data.empty:
+                team_pos_players = team_filtered_data[team_filtered_data['Team'] == team_choice]['Player'].tolist()
                 taken = [name for p, name in st.session_state.lineup.items() if p != pos]
                 available_players = [p for p in team_pos_players if p not in taken]
 
             current = st.session_state.lineup.get(pos, "Select Player")
+            choice_index = 0
+            if current in available_players:
+                choice_index = available_players.index(current) + 1
+                
             choice = st.selectbox(f"Player ({pos})", 
-                                ["Select Player"] + available_players, 
-                                index=0 if current not in available_players else available_players.index(current)+1,
-                                key=f"p_{pos}")
+                                  ["Select Player"] + available_players, 
+                                  index=choice_index,
+                                  key=f"p_{pos}")
 
         if choice != "Select Player":
             st.session_state.lineup[pos] = choice
-            p_row = df_SF[df_SF['Player'] == choice].iloc[0]
+            
+            p_row_filter = (df['Player'] == choice) & (df['Team'] == team_choice) & (df['League'] == league_choice) & (df['Season'] == season_choice)
+            p_row = df[p_row_filter].iloc[0]
             
             if pos == "GK":
                 stats = {"Goalkeeping": p_row.get('Goalkeeping', 0)}
@@ -997,8 +1031,12 @@ elif page == "Lineup Builder":
                 stats = p_row[outfield_categories].to_dict()
 
             plot_data[pos] = {
-                "name": choice, "grade": p_row['Grade'],
-                "x": coords[0], "y": coords[1], "metrics": stats, "team": team_choice
+                "name": choice, 
+                "grade": p_row['Grade'],
+                "x": coords[0], 
+                "y": coords[1], 
+                "metrics": stats, 
+                "team": f"{team_choice} ({season_choice})" 
             }
 
     pitch = VerticalPitch(pitch_type='statsbomb', pitch_color="#1a7953", line_color='#c7d5cc')
@@ -1026,7 +1064,7 @@ elif page == "Lineup Builder":
                     bbox=dict(facecolor='black', alpha=0.8, boxstyle='round',pad=0.2),)
         else:
             for i, (val, color) in enumerate(zip(info['metrics'].values(), metric_colors)):
-                horizontal_offset = (i - 2.5) * 3
+                horizontal_offset = (i - 3) * 3
                 pitch.annotate(f"{val:.0f}", xy=(px - 8, py + horizontal_offset), 
                             va='center', ha='center', color=color, 
                             fontsize=8.5, fontweight='bold', 
@@ -1046,15 +1084,16 @@ elif page == "Lineup Builder":
     ax.text(0.945, 0.04, footer_tag, transform=ax.transAxes, 
             color='Black', fontsize=8, fontweight='bold',
             ha='right', va='bottom', alpha=1)
-
+            
     st.pyplot(fig)
+
     buf = io.BytesIO()
     fig.savefig(buf, format="png", dpi=300, bbox_inches="tight")
 
     st.download_button(
             label="📥 Download Lineup Image",
             data=buf.getvalue(),
-            file_name=f"{Season_filter}_Season_{selected_formation}_Lineup_Builder.png",
+            file_name=f"{selected_formation}_Lineup_Builder.png",
             mime="image/png")
         
 elif page == "Scatter Plot":
@@ -2651,7 +2690,7 @@ elif page == "Profile Clusters":
         
     def apply_ward_clustering(dataframe, n_clusters=4):
 
-            default_metrics = ["Goal-Scoring", "Attack", "Dribbling", "Possession", "Defense", "Physical"]
+            default_metrics = ["Goal-Scoring","Assist-Creation", "Attack", "Dribbling", "Possession", "Defense", "Physical"]
             include_age = st.checkbox("Include ***Age*** metric in the Clustering?", value=False)
             current_metrics = default_metrics.copy()
 
@@ -2684,7 +2723,7 @@ elif page == "Profile Clusters":
 
             with st.expander("🔍 What does the X and Y axis mean?"):
                 st.write("Since we used PCAs, the axis are mathematical blends of all the metrics. Here is how much each stat contributed to the axis orientation:")
-                st.dataframe(loadings.style.background_gradient(cmap='coolwarm'))     
+                st.dataframe(loadings.style.background_gradient(cmap='coolwarm'))    
             return df_c
 
     league_hierarchy = {
@@ -2702,9 +2741,11 @@ elif page == "Profile Clusters":
 
     with col1:
             season_list = sorted(df['Season'].dropna().unique().tolist(), reverse=True)
-            selected_season = st.selectbox("Filter by Season:", season_list)
-
-    df_season = df[df['Season'] == selected_season]
+            # CHANGED: selectbox is now a multiselect. Default is set to the most recent season.
+            selected_seasons = st.multiselect("Filter by Season(s):", options=season_list, default=[season_list[0]])
+            
+    # CHANGED: We use .isin() to filter for multiple items in a list instead of ==
+    df_season = df[df['Season'].isin(selected_seasons)]
 
     with col2:
             raw_leagues = df_season['League'].dropna().unique().tolist()
@@ -2715,6 +2756,7 @@ elif page == "Profile Clusters":
 
     viz_df = df_league[df_league['Position'] == viz_pos].copy()
 
+    # The code will naturally bypass rendering the chart if the user removes all seasons (viz_df becomes empty)
     if not viz_df.empty:
             st.divider()
                         
@@ -2753,19 +2795,20 @@ elif page == "Profile Clusters":
                         
                 viz_df['Player_Label'] = viz_df['Player'].apply(lambda x: f"<b>{x}</b>")
                         
-                title_str = f"Ward Clusters: {viz_pos}"
-                if selected_season != "All Seasons": title_str += f" | Season: {selected_season}"
+                # CHANGED: Title formatting to combine all selected seasons with a comma
+                seasons_display = ", ".join([str(s) for s in selected_seasons])
+                title_str = f"Ward Clusters: {viz_pos} | Seasons: {seasons_display}"
                 if selected_league != "All Leagues": title_str += f" | League: {selected_league}"
                 if selected_profile != "All Profiles": title_str += f" | {selected_profile} Only"
 
                 fig = px.scatter(
                     viz_df, x=x_axis, y=y_axis, 
-                    color='Ward_Cluster',         
+                    color='Ward_Cluster',        
                     text='Player_Label',      
                     hover_name='Player',      
                     title=title_str,
                     height=900,
-                    category_orders={"Ward_Cluster": updated_profiles}, # Legend sorted correctly
+                    category_orders={"Ward_Cluster": updated_profiles},
                     hover_data={
                         'Team': True, 
                         'Age': True, 
@@ -2796,11 +2839,14 @@ elif page == "Profile Clusters":
                     legend_title_text="Tactical Profiles"
                 )
                 
+                # CHANGED: Replaced slashes and spaces in the seasons list so the PNG file saves correctly
+                safe_season_string = "_".join([str(s) for s in selected_seasons]).replace("/", "-").replace(" ", "")
+                
                 chart_config = {
                     'displayModeBar': True,
                     'toImageButtonOptions': {
                         'format': 'png',
-                        'filename': f'PCA_Cluster_Map_{viz_pos}_{selected_season}',
+                        'filename': f'PCA_Cluster_Map_{viz_pos}_{safe_season_string}',
                         'height': 900,
                         'width': 1600,
                     }
@@ -2834,15 +2880,15 @@ elif page == "Re-Sale Value Calculator":
 
         df = df[df['League'] != 'Liga Revelação U23']    
         df = df[df['League'] != 'Campeonato de Portugal']    
-        df = df[df['League'] != 'Liga 3']    
+        #df = df[df['League'] != 'Liga 3']    
         df = df[df.Position != "GK"]
-        #df = df[df['League'] == 'Liga Portugal']
 
         df_m = df.copy().sort_values(['Player', 'Season'])
 
         league_hierarchy = {
             'Liga Portugal': 1,
-            'Liga 2': 2
+            'Liga 2': 2,
+            'Liga 3': 3
         }
 
         df_m['League_Level'] = df_m['League'].map(league_hierarchy).fillna(6)
@@ -2860,7 +2906,15 @@ elif page == "Re-Sale Value Calculator":
             "Feirense": 7200000, "Felgueiras 1932": 850000, "Leixões": 2000000,
             "Lusitania FC Lourosa": 0, "Penafiel": 1400000, "Torreense": 4500000,
             "UD Oliveirense": 250000, "União de Leiria": 4000000, "Mafra": 4000000,
-            "Vilaverdense": 0, "Sporting Covilhã": 100000, "Trofense": 250000,"Varzim": 700000}
+            "Vilaverdense": 0, "Sporting Covilhã": 100000, "Trofense": 250000,"Varzim": 700000,
+            "1º Dezembro":0,"AD Marco 09": 0,"Amarante": 0, "Amora": 4000000, "Atlético CP": 0,
+            "Caldas": 0, "Fafe": 0, "Lusitano Évora 1911": 0, "Paredes": 0, "Sanjoanense": 500000,
+            "São João Ver": 0, "União Santarém": 0, "Anadia": 0, "Lusitânia": 0, "Oliveira Hospital": 0,
+            "Vianense": 0, "Pêro Pinheiro": 0, "Canelas 2010": 50000, "Vitória Setúbal": 2750000, 
+            "Real SC": 4000000, "Fontinhas": 0, "Moncarapachense": 0, "Montalegre":0, 
+            "Vitória SC B": 1000000, "SC Braga B": 5000000, "Porto B": 2500000, "Benfica B": 2500000, "Sporting B": 5000000
+
+}
 
         df_m['Team_Record_Sale'] = df_m['Team'].map(record_sales_dict).fillna(0).astype(int)
 
@@ -3014,7 +3068,9 @@ elif page == "Re-Sale Value Calculator":
             df_enriched1 = df_enriched[df_enriched['Season'] == Season_filter]
 
         with col2:
-            League_filter = st.selectbox("League:", sorted(df_enriched1['League'].unique()))
+            ordered_leagues_df = df_enriched1[['League', 'League_Level']].drop_duplicates().sort_values('League_Level')
+            ordered_leagues_list = ordered_leagues_df['League'].tolist()
+            League_filter = st.selectbox("League:", ordered_leagues_list)
             df_enriched2 = df_enriched1[df_enriched1['League'] == League_filter]
 
         with col3:
@@ -3085,3 +3141,429 @@ elif page == "Re-Sale Value Calculator":
                     st.warning("It was not possible to calculate values for this team.")
     else:
         st.error("Error: DataFrame is not defined.") 
+
+elif page == "Ternary Graph":
+        st.write("""---""")
+        st.title("18 - Ternary Graph")
+        st.info(
+            "Liga Portugal  -  Liga Portugal 2  -  Liga 3  -  Campeonato de Portugal  -  Liga Revelação U23", icon="ℹ️")
+
+        df = df[df.Position != "GK"]
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            selected_season = st.selectbox("Season:", sorted(df['Season'].unique(), reverse=True), key="ternary_season")
+        with col2:
+            selected_league = st.selectbox("League:", df['League'].unique(), key="ternary_league")
+        with col3:
+            selected_position = st.selectbox("Position:", df['Position'].unique(), key="ternary_position")
+            
+        df_filtered = df[(df['Season'] == selected_season) & 
+                         (df['League'] == selected_league) & 
+                         (df['Position'] == selected_position)]
+        
+        def normalize_metric(metric_series):
+            max_val = metric_series.max()
+            min_val = metric_series.min()
+            if max_val == min_val:
+                return metric_series * 0 
+            return ((metric_series - min_val) / (max_val - min_val)) * 100
+
+        df_filtered["Goal-Scoring"] = normalize_metric(df_filtered["Goal-Scoring"])
+        df_filtered["Attack"] = normalize_metric(df_filtered["Attack"])
+        df_filtered["Defense"] = normalize_metric(df_filtered["Defense"])
+        df_filtered["Possession"] = normalize_metric(df_filtered["Possession"])
+
+        st.divider()
+        st.subheader("📋 Custom Tactical Map")
+
+        available_metrics = ["Goal-Scoring", "Assist-Creation", "Attack", "Dribbling", "Possession", "Defense", "Physical"]
+        
+        selected_metrics = st.multiselect(
+            "Choose exactly 3 metrics for the Ternary Graph:",
+            options=available_metrics,
+            default=["Attack", "Possession", "Defense"],
+            max_selections=3
+        )
+
+        if len(selected_metrics) == 3:
+            
+            plot_df = df_filtered.copy()
+            plot_df = plot_df.dropna(subset=selected_metrics + ['Player'])
+            plot_df = plot_df[(plot_df[selected_metrics[0]] > 0) | 
+                              (plot_df[selected_metrics[1]] > 0) | 
+                              (plot_df[selected_metrics[2]] > 0)]
+
+            if not plot_df.empty:
+                import plotly.express as px
+                
+                fig = px.scatter_ternary(
+                    plot_df,
+                    a=selected_metrics[0],
+                    b=selected_metrics[1],
+                    c=selected_metrics[2],
+                    color="Team",
+                    hover_name="Player",
+                    hover_data=["Team", "Age"], 
+                    title=f"{selected_league} ({selected_season}) - {selected_position}",
+                    template="plotly_white"
+                )
+                
+                fig.update_traces(
+                    marker=dict(size=10, line=dict(width=0.5, color='DarkSlateGrey')),
+                    selector=dict(mode='markers'),
+                    cliponaxis=False
+                )
+                
+                fig.update_layout(
+                        height=700,
+                        margin=dict(l=40, r=40, t=60, b=40), 
+                        showlegend=True,
+                        ternary=dict(
+                            sum=None,
+                            aaxis=dict(title_font=dict(size=14), tickfont=dict(size=10), layer="below traces"),
+                            baxis=dict(title_font=dict(size=14), tickfont=dict(size=10), layer="below traces"),
+                            caxis=dict(title_font=dict(size=14), tickfont=dict(size=10), layer="below traces")
+                        )
+                    )
+                    
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.warning("Not enough data available to plot these specific metrics for the selected filters.")
+        else:
+            st.warning("Please select exactly 3 metrics from the dropdown above to generate the chart.")
+
+elif page == "Team Global Analysis":
+        st.write("""---""")
+        st.title("19 - Team Global Analysis")
+        st.info("This section aggregates individual player metrics to map out team-wide tactical identities and styles.")
+
+        df_clean = df.dropna(subset=['Team', 'Position']).copy()
+
+        outfield_metrics = ["Goal-Scoring", "Assist-Creation", "Attack", "Dribbling", "Possession", "Defense", "Physical"]
+        gk_metric = "Goalkeeping"
+
+        if not df_clean.empty:
+
+            df_clean['Player_Rating'] = 0.0
+            
+            outfield_mask = df_clean['Position'] != 'GK'
+            df_clean.loc[outfield_mask, 'Player_Rating'] = df_clean.loc[outfield_mask, outfield_metrics].mean(axis=1)
+            
+            gk_mask = df_clean['Position'] == 'GK'
+            df_clean.loc[gk_mask, 'Player_Rating'] = df_clean.loc[gk_mask, gk_metric]
+            
+            df_clean = df_clean.dropna(subset=['Player_Rating'])
+
+            outfield_df = df_clean[df_clean['Position'] != 'GK']
+            team_profiles = outfield_df.groupby(['Season', 'League', 'Team'])[outfield_metrics].mean().reset_index()
+            
+            team_profiles['Attacking_Pillar'] = team_profiles[['Goal-Scoring', 'Assist-Creation', 'Attack']].mean(axis=1)
+            team_profiles['Control_Pillar'] = team_profiles[['Dribbling', 'Possession']].mean(axis=1)
+            team_profiles['Defensive_Pillar'] = team_profiles[['Defense', 'Physical']].mean(axis=1)
+            
+            median_control_map = team_profiles.groupby(['Season', 'League'])['Control_Pillar'].median().to_dict()
+            
+            #def classify_tactical_archetype(row):
+                #pillars = {
+                    #'Attacking Powerhouse': row['Attacking_Pillar'],
+                    #'Possession & Control Engine': row['Control_Pillar'],
+                    #Defensive Rock / Resilient Block': row['Defensive_Pillar']
+                #}
+                #dominant_style = max(pillars, key=pillars.get)
+                #current_median = median_control_map.get((row['Season'], row['League']), team_profiles['Control_Pillar'].median())
+                
+                #if dominant_style == 'Possession & Control Engine' and row['Attacking_Pillar'] > row['Defensive_Pillar']:
+                    #return 'Fluid Attacking Control'
+                #elif dominant_style == 'Defensive Rock / Resilient Block' and row['Control_Pillar'] < current_median:
+                    #return 'Direct Counter-Attacking / Low-Block'
+                #return dominant_style
+
+            #team_profiles['Archetype'] = team_profiles.apply(classify_tactical_archetype, axis=1)
+
+            position_strength_df = df_clean.groupby(['Season', 'League', 'Team', 'Position'])['Player_Rating'].mean().unstack(fill_value=0).reset_index()
+            available_positions = sorted(df_clean['Position'].unique().tolist())
+
+            enable_compare = st.checkbox("Compare with another team/season?", value=False)
+
+            c_sel1, c_sel2 = st.columns(2)
+            with c_sel1:
+                st.markdown("### 1. Main Team Target")
+                s1 = st.selectbox("Season:", sorted(df_clean['Season'].unique(), reverse=True), key="team_season_1")
+                l1_opts = sorted(df_clean[df_clean['Season'] == s1]['League'].unique())
+                l1 = st.selectbox("League:", l1_opts, key="team_league_1")
+                t1_opts = sorted(team_profiles[(team_profiles['Season'] == s1) & (team_profiles['League'] == l1)]['Team'].unique())
+                selected_team = st.selectbox("Select Main Team:", t1_opts, key="team_main")
+                
+            with c_sel2:
+                st.markdown("### 2. Comparison Target")
+                if enable_compare:
+                    s2 = st.selectbox("Season:", sorted(df_clean['Season'].unique(), reverse=True), key="team_season_2")
+                    l2_opts = sorted(df_clean[df_clean['Season'] == s2]['League'].unique())
+                    l2 = st.selectbox("League:", l2_opts, key="team_league_2")
+                    t2_opts = sorted(team_profiles[(team_profiles['Season'] == s2) & (team_profiles['League'] == l2)]['Team'].unique())
+                    compare_team = st.selectbox("Select Team to Compare:", t2_opts, key="team_compare")
+                else:
+                    s2, l2, compare_team = None, None, None
+
+            st.divider()
+
+            def display_team_cards(team_name, season, league):
+                meta_filter = (team_profiles['Team'] == team_name) & (team_profiles['Season'] == season) & (team_profiles['League'] == league)
+                team_meta = team_profiles[meta_filter].iloc[0]
+                squad_size = len(df_clean[(df_clean['Team'] == team_name) & (df_clean['Season'] == season) & (df_clean['League'] == league)])
+                
+                pos_filter = (position_strength_df['Team'] == team_name) & (position_strength_df['Season'] == season) & (position_strength_df['League'] == league)
+                team_pos_row = position_strength_df[pos_filter].iloc[0]
+                valid_positions = [pos for pos in available_positions if pos in team_pos_row.index]
+                ranked_positions = team_pos_row[valid_positions].sort_values(ascending=False)
+                
+                ranking_html = ""
+                for i, (pos, score) in enumerate(ranked_positions.items()):
+                    ranking_html += f"{i+1}. **{pos}** ({score:.2f})<br>"
+                
+                st.markdown(f"#### {team_name} <span style='font-size:0.75em; color:gray;'>({season})</span>", unsafe_allow_html=True)
+                #mc1, mc2, mc3 = st.columns(3)
+                mc1, mc3 = st.columns(2)
+                mc1.metric("Squad Size", squad_size)
+                #mc2.markdown(f"**Archetype:**<br>`{team_meta['Archetype']}`", unsafe_allow_html=True)
+                mc3.markdown(f"**Positional Ranking:**<br><span style='font-size:0.9em;'>{ranking_html}</span>", unsafe_allow_html=True)
+
+            st.write("")
+            if compare_team:
+                t1_col, t2_col = st.columns(2)
+                with t1_col: display_team_cards(selected_team, s1, l1)
+                with t2_col: display_team_cards(compare_team, s2, l2)
+            else:
+                display_team_cards(selected_team, s1, l1)
+            
+            league_pos_avg = df_clean[(df_clean['Season'] == s1) & (df_clean['League'] == l1)].groupby('Position').mean(numeric_only=True)
+            radar_categories = []
+            league_vals = []
+            cat_positions = [] 
+            
+            for pos in available_positions:
+                pos_metrics = [gk_metric] if pos == 'GK' else outfield_metrics
+                for m in pos_metrics:
+                    radar_categories.append(f"<b>{pos}</b><br>{m}")
+                    cat_positions.append(pos)
+                    if pos in league_pos_avg.index and m in league_pos_avg.columns and not pd.isna(league_pos_avg.loc[pos, m]):
+                        league_vals.append(league_pos_avg.loc[pos, m])
+                    else:
+                        league_vals.append(0)
+
+            def get_team_radar_vals(team_name, season, league):
+                t_df = df_clean[(df_clean['Team'] == team_name) & (df_clean['Season'] == season) & (df_clean['League'] == league)]
+                t_pos_avg = t_df.groupby('Position').mean(numeric_only=True)
+                t_vals = []
+                for pos in available_positions:
+                    p_metrics = [gk_metric] if pos == 'GK' else outfield_metrics
+                    for m in p_metrics:
+                        if pos in t_pos_avg.index and m in t_pos_avg.columns and not pd.isna(t_pos_avg.loc[pos, m]):
+                            t_vals.append(t_pos_avg.loc[pos, m])
+                        else:
+                            t_vals.append(0)
+                return t_vals
+
+            team1_vals = get_team_radar_vals(selected_team, s1, l1)
+            team2_vals = get_team_radar_vals(compare_team, s2, l2) if compare_team else []
+            
+            if compare_team and team1_vals and team2_vals:
+                v1 = np.array(team1_vals)
+                v2 = np.array(team2_vals)
+                
+                v1_centered = v1 - np.mean(v1)
+                v2_centered = v2 - np.mean(v2)
+                
+                denom = (np.linalg.norm(v1_centered) * np.linalg.norm(v2_centered))
+                if denom > 0:
+                    r_val = np.dot(v1_centered, v2_centered) / denom
+                    similarity_score = (r_val + 1) / 2 * 100
+                else:
+                    similarity_score = 100.0 if np.array_equal(v1, v2) else 0.0
+                
+                st.write("")
+                col_metric, _ = st.columns([1, 2])
+                with col_metric:
+                    st.metric(
+                        label="Squad Playstyle Similarity Score", 
+                        value=f"{similarity_score:.2f}%",
+                        help="Calculated using a normalized profile correlation."
+                    )
+            
+            if radar_categories:
+                radar_categories.append(radar_categories[0])
+                league_vals.append(league_vals[0])
+                cat_positions.append(cat_positions[0])
+                if team1_vals: team1_vals.append(team1_vals[0])
+                if team2_vals: team2_vals.append(team2_vals[0])
+
+            fig = go.Figure()
+            
+            all_plotted_vals = league_vals + team1_vals + team2_vals
+            max_val = max(all_plotted_vals) if all_plotted_vals else 100
+            bg_radius = max_val + 5
+            
+            bg_colors = [
+                'rgba(31, 119, 180, 0.07)', 'rgba(214, 39, 40, 0.06)', 'rgba(148, 103, 189, 0.07)', 
+                'rgba(230, 171, 2, 0.06)', 'rgba(227, 119, 194, 0.07)', 'rgba(23, 190, 207, 0.07)', 'rgba(44, 160, 44, 0.06)'
+            ]
+            
+            for i, pos in enumerate(available_positions):
+                color = bg_colors[i % len(bg_colors)]
+                r_bg = [bg_radius if cp == pos else 0 for cp in cat_positions]
+                fig.add_trace(go.Scatterpolar(r=r_bg, theta=radar_categories, fill='toself', fillcolor=color, line=dict(color='rgba(0,0,0,0)'), showlegend=False, hoverinfo='skip'))
+            
+            fig.add_trace(go.Scatterpolar(r=team1_vals, theta=radar_categories, fill='toself', name=f"{selected_team} ({s1})", line_color='#2ca02c', fillcolor='rgba(44, 160, 44, 0.25)'))
+            
+            if compare_team:
+                fig.add_trace(go.Scatterpolar(r=team2_vals, theta=radar_categories, fill='toself', name=f"{compare_team} ({s2})", line_color='#ff7f0e', fillcolor='rgba(255, 127, 14, 0.25)'))
+            
+            fig.add_trace(go.Scatterpolar(r=league_vals, theta=radar_categories, fill='toself', name=f"Baseline: {l1} Avg ({s1})", line_color='#7f7f7f', fillcolor='rgba(127, 127, 127, 0.03)', line=dict(dash='dash')))
+            
+            fig.update_layout(
+                polar=dict(radialaxis=dict(visible=True, range=[0, bg_radius])),
+                height=850,
+                margin=dict(l=90, r=90, t=60, b=60),
+                legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
+            )
+            
+            st.write("### 📋 Squad Positional Fingerprint")
+            st.caption("Hover over the chart and click the **📸 Camera Icon** in the top right to download a high-res PNG.")
+            st.plotly_chart(
+                fig, 
+                use_container_width=True, 
+                config={
+                    'displayModeBar': True,
+                    'toImageButtonOptions': {
+                        'format': 'png',
+                        'filename': f"{selected_team}_vs_{compare_team}_Fingerprint" if compare_team else f"{selected_team}_Fingerprint",
+                        'height': 1000,
+                        'width': 1000,
+                        'scale': 2
+                    }
+                }
+            )
+            
+            st.write("### 📋 Top Contributing Players")
+            display_columns = ['Player', 'Position', 'Age', 'Player_Rating', gk_metric] + outfield_metrics
+            
+            def get_roster_df(team_name, season, league):
+                mask = (df_clean['Team'] == team_name) & (df_clean['Season'] == season) & (df_clean['League'] == league)
+                r_df = df_clean[mask][display_columns].copy()
+                
+                metric_cols = ['Player_Rating', gk_metric] + outfield_metrics
+                for col in metric_cols:
+                    r_df[col] = pd.to_numeric(r_df[col], errors='coerce')
+                
+                r_df = r_df.sort_values(by="Player_Rating", ascending=False)
+                
+                format_rules = {col: "{:.2f}" for col in metric_cols}
+                if 'Age' in r_df.columns:
+                    r_df['Age'] = pd.to_numeric(r_df['Age'], errors='coerce')
+                    format_rules['Age'] = "{:.0f}"
+                
+                styled_df = r_df.style.format(
+                    formatter=format_rules,
+                    na_rep="-"
+                ).set_properties(
+                    subset=['Player_Rating'],
+                    **{
+                        'background-color': '#e6f2ff',  
+                        'color': '#003366',             #Column color
+                        'font-weight': 'bold'
+                    }
+                )
+                return styled_df
+            
+            if compare_team:
+                tab1, tab2 = st.tabs([f"{selected_team} ({s1})", f"{compare_team} ({s2})"])
+                with tab1: 
+                    st.dataframe(get_roster_df(selected_team, s1, l1), hide_index=True, use_container_width=True)
+                with tab2: 
+                    st.dataframe(get_roster_df(compare_team, s2, l2), hide_index=True, use_container_width=True)
+            else:
+                st.dataframe(get_roster_df(selected_team, s1, l1), hide_index=True, use_container_width=True)
+
+        else:
+            st.warning("No player metrics available to construct profiles with the underlying dataset context.")
+
+        def calculate_similarity(v1, v2):
+                v1_arr = np.array(v1)
+                v2_arr = np.array(v2)
+                v1_centered = v1_arr - np.mean(v1_arr)
+                v2_centered = v2_arr - np.mean(v2_arr)
+                
+                denom = (np.linalg.norm(v1_centered) * np.linalg.norm(v2_centered))
+                if denom > 0:
+                    r_val = np.dot(v1_centered, v2_centered) / denom
+                    return (r_val + 1) / 2 * 100
+                else:
+                    return 100.0 if np.array_equal(v1_arr, v2_arr) else 0.0
+
+        if compare_team and team1_vals and team2_vals:
+                similarity_score = calculate_similarity(team1_vals, team2_vals)
+                
+                st.write("")
+                col_metric, _ = st.columns([1, 2])
+                with col_metric:
+                    st.metric(
+                        label="Squad Playstyle Similarity Score", 
+                        value=f"{similarity_score:.2f}%",
+                        help="Calculated using a normalized profile correlation."
+                    )
+                    
+        st.divider()
+        st.write("### 🔍 Top 10 Most Similar Playstyles")
+        st.caption(f"Finding squads historically most similar to **{selected_team} ({s1})**.")
+        st.info("Leave these filters empty to search across your entire database.")
+        f_col1, f_col2 = st.columns(2)
+        with f_col1:
+                available_pool_seasons = sorted(team_profiles['Season'].unique(), reverse=True)
+                filter_seasons = st.multiselect("Limit search to specific Season(s):", available_pool_seasons)
+        with f_col2:
+                available_pool_leagues = sorted(team_profiles['League'].unique())
+                filter_leagues = st.multiselect("Limit search to specific League(s):", available_pool_leagues)
+
+        base_team1_vals = team1_vals[:-1] if len(team1_vals) > len(available_positions) else team1_vals
+            
+        if base_team1_vals:
+                similarity_results = []
+                
+                pool_combinations = team_profiles[['Season', 'League', 'Team']].drop_duplicates()
+                
+                if filter_seasons:
+                    pool_combinations = pool_combinations[pool_combinations['Season'].isin(filter_seasons)]
+                if filter_leagues:
+                    pool_combinations = pool_combinations[pool_combinations['League'].isin(filter_leagues)]
+                
+                for _, row in pool_combinations.iterrows():
+                    t_season = row['Season']
+                    t_league = row['League']
+                    t_name = row['Team']
+                    
+                    if t_name == selected_team and t_season == s1 and t_league == l1:
+                        continue
+                        
+                    t_vals = get_team_radar_vals(t_name, t_season, t_league)
+                    
+                    if len(t_vals) == len(base_team1_vals) and len(t_vals) > 0:
+                        sim_score = calculate_similarity(base_team1_vals, t_vals)
+                        similarity_results.append({
+                            "Team": t_name,
+                            "Season": t_season,
+                            "League": t_league,
+                            "Similarity (%)": sim_score
+                        })
+                
+                if similarity_results:
+                    sim_df = pd.DataFrame(similarity_results)
+                    sim_df = sim_df.sort_values(by="Similarity (%)", ascending=False).head(10)
+                    
+                    sim_df.index = np.arange(1, len(sim_df) + 1) 
+                    st.dataframe(
+                        sim_df.style.format({"Similarity (%)": "{:.2f}%"}).background_gradient(cmap='Greens', subset=['Similarity (%)']),
+                        use_container_width=True
+                    )
+                else:
+                    st.warning("No teams found matching those specific filter criteria to compare against.")       
